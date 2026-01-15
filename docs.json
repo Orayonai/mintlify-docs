@@ -93,6 +93,15 @@
             "pages": [
               "api-reference/webhooks/transferir-humano"
             ]
+          },
+          {
+            "group": "Crons (pg_cron)",
+            "pages": [
+              "api-reference/crons/overview",
+              "api-reference/crons/reabrir-sessoes",
+              "api-reference/crons/limpar-sessoes",
+              "api-reference/crons/enviar-lembretes"
+            ]
           }
         ]
       }

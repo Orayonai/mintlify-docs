@@ -1,0 +1,108 @@
+---
+title: 'Limpar Sessoes'
+description: 'Job que remove sessoes antigas e inativas'
+---
+
+## Visao Geral
+
+O job `cron_limpar_sessoes` remove sessoes que estao inativas ha muito tempo, mantendo o banco de dados limpo e performatico.
+
+## Configuracao
+
+| Propriedade | Valor |
+|-------------|-------|
+| **Nome** | limpar-sessoes |
+| **Schedule** | `0 3 * * *` (diario as 03:00) |
+| **Funcao** | `cron_limpar_sessoes()` |
+| **Retencao** | 30 dias |
+
+---
+
+## Funcao SQL
+
+```sql
+CREATE OR REPLACE FUNCTION cron_limpar_sessoes()
+RETURNS void AS $$
+DECLARE
+  v_deleted INTEGER;
+BEGIN
+  -- Deleta sessoes inativas ha mais de 30 dias
+  DELETE FROM whatsapp.sessions
+  WHERE
+    status = 'CLOSED'
+    AND updated_at < NOW() - INTERVAL '30 days';
+
+  GET DIAGNOSTICS v_deleted = ROW_COUNT;
+
+  -- Log
+  INSERT INTO public.cron_logs (job_name, records_affected, executed_at)
+  VALUES ('limpar-sessoes', v_deleted, NOW());
+
+  RAISE NOTICE 'Sessoes removidas: %', v_deleted;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+---
+
+## Criar o Job
+
+```sql
+SELECT cron.schedule(
+  'limpar-sessoes',
+  '0 3 * * *',
+  $$SELECT cron_limpar_sessoes()$$
+);
+```
+
+---
+
+## Criterios de Limpeza
+
+| Condicao | Acao |
+|----------|------|
+| `status = CLOSED` + 30 dias | Deletar |
+| `status = OPEN` inativo 7 dias | Fechar automaticamente |
+| `status = PAUSED` expirado | Reabrir (outro job) |
+
+---
+
+## Limpeza de Mensagens
+
+As mensagens sao deletadas em cascata quando a sessao e removida (FK com `ON DELETE CASCADE`).
+
+```sql
+-- Verificar configuracao
+SELECT
+  tc.constraint_name,
+  rc.delete_rule
+FROM information_schema.table_constraints tc
+JOIN information_schema.referential_constraints rc
+  ON tc.constraint_name = rc.constraint_name
+WHERE tc.table_name = 'messages';
+```
+
+---
+
+## Verificar Sessoes para Limpeza
+
+```sql
+SELECT
+  COUNT(*) as total,
+  status
+FROM whatsapp.sessions
+WHERE updated_at < NOW() - INTERVAL '30 days'
+GROUP BY status;
+```
+
+---
+
+## Executar Manualmente
+
+```sql
+SELECT cron_limpar_sessoes();
+```
+
+<Note>
+  O job roda as 03:00 para minimizar impacto no sistema durante horario de pico.
+</Note>

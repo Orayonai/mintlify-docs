@@ -1,0 +1,98 @@
+---
+title: 'Crons Overview'
+description: 'Jobs agendados com pg_cron no Supabase'
+---
+
+## Visao Geral
+
+O sistema utiliza **pg_cron** para executar tarefas automatizadas no Supabase. Esses jobs rodam em intervalos definidos para manter o sistema funcionando corretamente.
+
+## O que e pg_cron?
+
+`pg_cron` e uma extensao do PostgreSQL que permite agendar jobs SQL diretamente no banco de dados, similar ao cron do Linux.
+
+---
+
+## Jobs Ativos
+
+| Job | Frequencia | Funcao |
+|-----|------------|--------|
+| Reabrir Sessoes | A cada hora | Reativa sessoes pausadas que expiraram |
+| Limpar Sessoes | Diario (03:00) | Remove sessoes antigas inativas |
+| Enviar Lembretes | A cada 30 min | Dispara lembretes de eventos |
+| Validar Janela 24h | A cada 15 min | Verifica leads com janela ativa |
+
+---
+
+## Como Visualizar Jobs
+
+```sql
+SELECT * FROM cron.job;
+```
+
+### Response
+
+```json
+[
+  {
+    "jobid": 1,
+    "schedule": "0 * * * *",
+    "command": "SELECT cron_reabrir_sessoes()",
+    "nodename": "localhost",
+    "nodeport": 5432,
+    "database": "postgres",
+    "username": "postgres",
+    "active": true
+  }
+]
+```
+
+---
+
+## Como Criar um Job
+
+```sql
+SELECT cron.schedule(
+  'nome-do-job',
+  '*/30 * * * *',  -- A cada 30 minutos
+  $$SELECT minha_funcao()$$
+);
+```
+
+---
+
+## Sintaxe Cron
+
+```
+┌───────────── minuto (0 - 59)
+│ ┌───────────── hora (0 - 23)
+│ │ ┌───────────── dia do mes (1 - 31)
+│ │ │ ┌───────────── mes (1 - 12)
+│ │ │ │ ┌───────────── dia da semana (0 - 6) (Domingo = 0)
+│ │ │ │ │
+* * * * *
+```
+
+### Exemplos
+
+| Expressao | Significado |
+|-----------|-------------|
+| `* * * * *` | A cada minuto |
+| `*/5 * * * *` | A cada 5 minutos |
+| `0 * * * *` | A cada hora |
+| `0 3 * * *` | Todo dia as 03:00 |
+| `0 0 * * 0` | Todo domingo a meia-noite |
+
+---
+
+## Monitorar Execucoes
+
+```sql
+SELECT * FROM cron.job_run_details
+ORDER BY start_time DESC
+LIMIT 10;
+```
+
+<Info>
+  Os logs de execucao ficam na tabela `cron.job_run_details` por 7 dias.
+</Info>

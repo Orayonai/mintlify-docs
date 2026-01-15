@@ -1,0 +1,133 @@
+---
+title: 'Enviar Lembretes'
+description: 'Job que dispara lembretes de eventos para leads'
+---
+
+## Visao Geral
+
+O job `cron_enviar_lembretes` verifica leads que precisam receber lembretes de eventos proximos e dispara as mensagens via webhook.
+
+## Configuracao
+
+| Propriedade | Valor |
+|-------------|-------|
+| **Nome** | enviar-lembretes |
+| **Schedule** | `*/30 * * * *` (a cada 30 min) |
+| **Funcao** | `cron_enviar_lembretes()` |
+
+---
+
+## Funcao SQL
+
+```sql
+CREATE OR REPLACE FUNCTION cron_enviar_lembretes()
+RETURNS void AS $$
+DECLARE
+  v_lead RECORD;
+  v_count INTEGER := 0;
+BEGIN
+  -- Busca leads para lembrete
+  FOR v_lead IN
+    SELECT
+      l.id,
+      l.phone_number,
+      l.name,
+      e.titulo,
+      e.data,
+      e.horario,
+      e.link
+    FROM public.tb_leads l
+    JOIN public.tb_eventos e ON l.event_id = e.id
+    WHERE
+      l.reminder_enabled = true
+      AND l.reminder_sent = false
+      AND e.ativo = true
+      AND e.data_evento <= NOW() + INTERVAL '24 hours'
+      AND e.data_evento > NOW()
+  LOOP
+    -- Chama webhook para enviar mensagem
+    PERFORM net.http_post(
+      url := 'https://webhook.orayon.com.br/webhook/lembrete',
+      body := jsonb_build_object(
+        'phone', v_lead.phone_number,
+        'name', v_lead.name,
+        'event_title', v_lead.titulo,
+        'event_date', v_lead.data,
+        'event_time', v_lead.horario,
+        'event_link', v_lead.link
+      )
+    );
+
+    -- Marca como enviado
+    UPDATE public.tb_leads
+    SET reminder_sent = true, reminder_sent_at = NOW()
+    WHERE id = v_lead.id;
+
+    v_count := v_count + 1;
+  END LOOP;
+
+  RAISE NOTICE 'Lembretes enviados: %', v_count;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+---
+
+## Criar o Job
+
+```sql
+SELECT cron.schedule(
+  'enviar-lembretes',
+  '*/30 * * * *',
+  $$SELECT cron_enviar_lembretes()$$
+);
+```
+
+---
+
+## Webhook de Lembrete
+
+O job chama um webhook N8N que formata e envia a mensagem:
+
+```json
+{
+  "phone": "+5511999999999",
+  "name": "Maria",
+  "event_title": "Evento Semanal Orayon",
+  "event_date": "Quinta-feira, 16 de janeiro",
+  "event_time": "20:00 - 21:00",
+  "event_link": "https://link.orayon.com.br/event-zoom"
+}
+```
+
+---
+
+## Verificar Leads Pendentes
+
+```sql
+SELECT
+  l.name,
+  l.phone_number,
+  e.titulo,
+  e.data
+FROM public.tb_leads l
+JOIN public.tb_eventos e ON l.event_id = e.id
+WHERE
+  l.reminder_enabled = true
+  AND l.reminder_sent = false
+  AND e.ativo = true;
+```
+
+---
+
+## Bloquear Lembretes
+
+Leads podem bloquear lembretes via RPC:
+
+```sql
+SELECT block_reminders('+5511999999999', true);
+```
+
+<Info>
+  Lembretes sao enviados 24 horas antes do evento. O lead pode desativar usando a funcao `block_reminders`.
+</Info>
