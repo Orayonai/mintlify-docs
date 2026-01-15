@@ -57,7 +57,7 @@
             ]
           },
           {
-            "group": "RPC - Leads",
+            "group": "Agent Tools - Leads",
             "pages": [
               "api-reference/rpc/get-lead",
               "api-reference/rpc/save-lead",
@@ -66,7 +66,7 @@
             ]
           },
           {
-            "group": "RPC - Sessions",
+            "group": "Agent Tools - Sessions",
             "pages": [
               "api-reference/rpc/pause-session",
               "api-reference/rpc/get-session",
@@ -74,7 +74,7 @@
             ]
           },
           {
-            "group": "REST - Tables",
+            "group": "whatsapp.tables",
             "pages": [
               "api-reference/tables/sessions",
               "api-reference/tables/contacts",
