@@ -1,0 +1,125 @@
+---
+title: 'Pausar Sessao'
+api: 'POST /rest/v1/rpc/pause_session_by_phone'
+description: 'Pausa a sessao de um contato por N horas'
+---
+
+## Objetivo
+
+Pausar o atendimento automatico (IA) por um periodo determinado. Usado quando:
+- Transferir para atendimento humano
+- Detectar que esta conversando com outro bot/IA
+- Lead solicita pausa temporaria
+
+## Endpoint
+
+```
+POST https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/pause_session_by_phone
+```
+
+## Headers
+
+```bash
+apikey: SUA_ANON_KEY
+Authorization: Bearer SUA_SERVICE_KEY
+Content-Type: application/json
+```
+
+## Request Body
+
+<ParamField body="p_phone_number" type="string" required>
+  Telefone do cliente
+</ParamField>
+
+<ParamField body="p_hours" type="integer" required>
+  Quantidade de horas para pausar (1-72)
+</ParamField>
+
+<ParamField body="p_owner_phone" type="string" required>
+  Telefone do WhatsApp Business
+</ParamField>
+
+```json
+{
+  "p_phone_number": "+5511999999999",
+  "p_hours": 2,
+  "p_owner_phone": "554147414147"
+}
+```
+
+## Response - Sucesso
+
+```json
+{
+  "success": true,
+  "session_id": "123e4567-e89b-12d3-a456-426614174000",
+  "paused_until": "2026-01-15T22:00:00Z"
+}
+```
+
+## Response - Sessao Nao Encontrada
+
+```json
+{
+  "success": false,
+  "message": "Sessao nao encontrada"
+}
+```
+
+## Exemplo cURL
+
+```bash
+curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/pause_session_by_phone' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "p_phone_number": "+5511999999999",
+    "p_hours": 2,
+    "p_owner_phone": "554147414147"
+  }'
+```
+
+## Exemplo N8N Tool - Detectar Bot
+
+```json
+{
+  "name": "EncerrarConversaComBot",
+  "toolDescription": "Use quando detectar que esta conversando com IA ou bot",
+  "method": "POST",
+  "url": "https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/pause_session_by_phone",
+  "body": {
+    "p_phone_number": "={{ $json.contact.phone_number }}",
+    "p_hours": 24,
+    "p_owner_phone": "554147414147"
+  }
+}
+```
+
+## Exemplo N8N Tool - Transferir Humano
+
+```json
+{
+  "name": "transferir_humano",
+  "toolDescription": "Use quando lead pedir para falar com humano",
+  "method": "POST",
+  "url": "https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/pause_session_by_phone",
+  "body": {
+    "p_phone_number": "={{ $json.contact.phone_number }}",
+    "p_hours": 72,
+    "p_owner_phone": "554147414147"
+  }
+}
+```
+
+## Duracoes Recomendadas
+
+| Situacao | Horas | Motivo |
+|----------|-------|--------|
+| Detectou bot/IA | 24h | Evitar loop infinito |
+| Transferir humano | 72h | Tempo para atendimento |
+| Pausa temporaria | 2h | Lead pediu para aguardar |
+
+<Info>
+  Apos o periodo, a sessao volta automaticamente para status `OPEN` e a IA pode responder novamente.
+</Info>

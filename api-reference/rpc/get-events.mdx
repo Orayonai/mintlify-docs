@@ -1,0 +1,133 @@
+---
+title: 'Buscar Eventos'
+api: 'POST /rest/v1/rpc/get_events_by_language'
+description: 'Retorna dados do proximo evento por idioma'
+---
+
+## Objetivo
+
+Obter informacoes atualizadas do proximo evento (data, horario, link Zoom). **Deve ser executada SEMPRE no inicio da conversa, apos `get_lead_by_phone`.**
+
+## Endpoint
+
+```
+POST https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_events_by_language
+```
+
+## Headers
+
+```bash
+apikey: SUA_ANON_KEY
+Authorization: Bearer SUA_SERVICE_KEY
+Content-Type: application/json
+```
+
+## Request Body
+
+<ParamField body="p_language" type="string">
+  Idioma do evento: `pt-BR`, `en-US`, `es-ES` (opcional)
+</ParamField>
+
+```json
+{
+  "p_language": "pt-BR"
+}
+```
+
+Ou sem parametro para retornar todos:
+
+```json
+{}
+```
+
+## Response
+
+<ResponseField name="id" type="integer">
+  ID unico do evento
+</ResponseField>
+
+<ResponseField name="data_evento_anterior" type="string">
+  Data do ultimo evento realizado
+</ResponseField>
+
+<ResponseField name="data_proximo_evento" type="string">
+  Data do proximo evento
+</ResponseField>
+
+<ResponseField name="dia_semana_proximo" type="string">
+  Dia da semana (ex: quinta-feira)
+</ResponseField>
+
+<ResponseField name="horario" type="string">
+  Horario do evento (ex: 20:00 - 21:00)
+</ResponseField>
+
+<ResponseField name="link_zoom" type="string">
+  Link de acesso ao Zoom
+</ResponseField>
+
+<ResponseField name="zoom_id" type="string">
+  ID da reuniao Zoom
+</ResponseField>
+
+<ResponseField name="zoom_senha" type="string">
+  Senha de acesso ao Zoom
+</ResponseField>
+
+<ResponseField name="titulo" type="string">
+  Titulo do evento
+</ResponseField>
+
+<ResponseField name="descricao" type="string">
+  Descricao do evento
+</ResponseField>
+
+```json
+{
+  "id": 1,
+  "data_evento_anterior": "2026-01-09",
+  "data_proximo_evento": "2026-01-16",
+  "dia_semana_proximo": "quinta-feira",
+  "horario": "20:00 - 21:00",
+  "link_zoom": "https://zoom.us/j/82455703323",
+  "zoom_id": "824 5570 3323",
+  "zoom_senha": "364350",
+  "titulo": "Evento Semanal Orayon",
+  "descricao": "Apresentacao semanal da plataforma"
+}
+```
+
+## Exemplo cURL
+
+```bash
+curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_events_by_language' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{}'
+```
+
+## Exemplo N8N Tool
+
+```json
+{
+  "name": "dados_evento",
+  "toolDescription": "Use SEMPRE no inicio, APOS verificar_cadastro. Retorna dados do evento.",
+  "method": "POST",
+  "url": "https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_events_by_language",
+  "body": {}
+}
+```
+
+## Fluxo de Uso
+
+```
+1. verificar_cadastro (primeiro)
+2. dados_evento (segundo) ← ESTA FUNCAO
+3. Conversar com lead usando dados atualizados
+4. salvar_lead (apos confirmacao)
+```
+
+<Warning>
+  NUNCA responda sobre datas do evento sem executar esta funcao primeiro. Use os dados retornados no `calendar`, NAO a data de hoje!
+</Warning>

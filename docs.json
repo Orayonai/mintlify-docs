@@ -48,21 +48,50 @@
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Overview",
             "pages": [
               "api-reference/introduction"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "RPC - Leads",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/rpc/get-lead",
+              "api-reference/rpc/save-lead",
+              "api-reference/rpc/get-events",
+              "api-reference/rpc/block-reminders"
+            ]
+          },
+          {
+            "group": "RPC - Sessions",
+            "pages": [
+              "api-reference/rpc/pause-session",
+              "api-reference/rpc/get-session",
+              "api-reference/rpc/validate-leads"
+            ]
+          },
+          {
+            "group": "REST - Tables",
+            "pages": [
+              "api-reference/tables/sessions",
+              "api-reference/tables/contacts",
+              "api-reference/tables/messages",
+              "api-reference/tables/events"
+            ]
+          },
+          {
+            "group": "Edge Functions",
+            "pages": [
+              "api-reference/edge/process-message"
+            ]
+          },
+          {
+            "group": "Webhooks",
+            "pages": [
+              "api-reference/webhooks/transferir-humano"
             ]
           }
         ]
@@ -93,7 +122,7 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Começar",
+      "label": "Comecar",
       "href": "https://orayon.ai"
     }
   },
@@ -112,7 +141,7 @@
   "footer": {
     "socials": {
       "x": "https://x.com/orayon",
-      "github": "https://github.com/orayon",
+      "github": "https://github.com/orayonai",
       "linkedin": "https://linkedin.com/company/orayon"
     }
   }

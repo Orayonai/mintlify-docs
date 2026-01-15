@@ -1,0 +1,168 @@
+---
+title: 'Process Message'
+description: 'Edge Function para processamento de mensagens WhatsApp'
+---
+
+## Visao Geral
+
+A Edge Function `process-message` e o nucleo central do sistema. Recebe webhooks de diferentes fontes, normaliza dados, gerencia sessoes e processa midia.
+
+## Endpoint
+
+```
+POST https://tkrjfifrwttikwsghuju.supabase.co/functions/v1/process-message
+```
+
+## Headers
+
+```bash
+Authorization: Bearer SUA_ANON_KEY
+Content-Type: application/json
+```
+
+---
+
+## Health Check
+
+```
+GET https://tkrjfifrwttikwsghuju.supabase.co/functions/v1/process-message
+```
+
+### Response
+
+```json
+{
+  "status": "ok",
+  "version": "1.2",
+  "timestamp": "2026-01-15T18:00:00Z"
+}
+```
+
+---
+
+## Request Body
+
+### Campos Obrigatorios
+
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `organization_name` | string | Nome da empresa |
+| `business_phone` | string | Telefone WhatsApp Business |
+| `phone_number` | string | Telefone do cliente |
+| `message_type` | string | TEXT, AUDIO, IMAGE, etc |
+| `message_text` | string | Conteudo da mensagem |
+| `direction` | string | IN ou OUT |
+| `author` | string | CUSTOMER, AGENT, AI |
+| `message_id` | string | ID unico da mensagem |
+
+### Campos de Webhook
+
+| Campo | Tipo | Valores |
+|-------|------|---------|
+| `webhook_format` | string | CHATWOOT, OFICIAL, NAO_OFICIAL |
+| `underlying_api` | string | META, UAZAPI, EVOLUTION |
+
+### Campos de Midia
+
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `media_url` | string | URL da midia |
+| `media_base64` | string | Midia em base64 |
+| `media_mimetype` | string | audio/ogg, image/jpeg |
+| `media_id` | string | ID Meta para download |
+
+### Campos de Credenciais
+
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `openai_api_key` | string | Para Whisper e Vision |
+| `redis_url` | string | URL do Redis |
+| `redis_token` | string | Token Redis |
+
+---
+
+## Exemplo Request
+
+```json
+{
+  "organization_name": "IrisSecretaria",
+  "business_phone": "5511999999999",
+  "phone_number": "5511888888888",
+  "message_type": "TEXT",
+  "message_text": "Ola, preciso de ajuda",
+  "direction": "IN",
+  "author": "CUSTOMER",
+  "message_id": "wamid.xxx",
+  "webhook_format": "CHATWOOT",
+  "underlying_api": "META",
+  "chatwoot_account_id": 1,
+  "chatwoot_conversation_id": 12345,
+  "openai_api_key": "sk-xxx",
+  "redis_url": "https://xxx.upstash.io",
+  "redis_token": "AXxxx"
+}
+```
+
+---
+
+## Response Sucesso
+
+```json
+{
+  "success": true,
+  "data": {
+    "organization_id": "uuid",
+    "contact_id": "uuid",
+    "session_id": "uuid",
+    "message_id": "uuid",
+    "session_status": "OPEN",
+    "continue_to_ai": true,
+    "concatenated_text": "Ola, preciso de ajuda",
+    "message_count": 1,
+    "history": [],
+    "processing_time_ms": 850,
+    "whisper_used": false,
+    "vision_used": false,
+    "redis_used": true
+  }
+}
+```
+
+---
+
+## Quando continue_to_ai = false
+
+| Situacao | Motivo |
+|----------|--------|
+| `session.status = PAUSED` | Humano assumiu |
+| `contact.bypass_bots = true` | Blacklist |
+| `direction = OUT` | Mensagem de saida |
+| Comando de controle | @pausar, @fechar |
+
+---
+
+## Processamento de Midia
+
+| Tipo | Processamento |
+|------|---------------|
+| AUDIO | Whisper transcricao |
+| IMAGE | GPT-4 Vision OCR |
+| VIDEO | Extrai audio + Whisper |
+| PDF | Extrai texto + Vision |
+
+---
+
+## Comandos Especiais
+
+| Comando | Acao |
+|---------|------|
+| `@pausar` | Pausa sessao |
+| `@pausar 2` | Pausa por 2 horas |
+| `@reabrir` | Reativa IA |
+| `@fechar` | Encerra + limpa memoria |
+| `@blacklist` | Adiciona blacklist |
+| `@whitelist` | Remove blacklist |
+
+<Warning>
+  O comando `@fechar` limpa automaticamente a memoria do agente no Redis (chave `memory:agent:{session_id}`).
+</Warning>

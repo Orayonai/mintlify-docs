@@ -1,0 +1,133 @@
+---
+title: 'Verificar Lead'
+api: 'POST /rest/v1/rpc/get_lead_by_phone'
+description: 'Verifica se um lead ja esta cadastrado pelo telefone'
+---
+
+## Objetivo
+
+Verificar se um lead ja existe no sistema antes de coletar dados. **Deve ser a PRIMEIRA funcao executada em toda conversa.**
+
+## Endpoint
+
+```
+POST https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_lead_by_phone
+```
+
+## Headers
+
+```bash
+apikey: SUA_ANON_KEY
+Authorization: Bearer SUA_SERVICE_KEY
+Content-Type: application/json
+```
+
+## Request Body
+
+<ParamField body="p_phone_number" type="string" required>
+  Telefone do lead no formato internacional (ex: +5511999999999)
+</ParamField>
+
+```json
+{
+  "p_phone_number": "+5511999999999"
+}
+```
+
+## Response - Lead Encontrado
+
+<ResponseField name="found" type="boolean">
+  `true` se o lead existe
+</ResponseField>
+
+<ResponseField name="id" type="integer">
+  ID unico do lead
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Nome do lead
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  Email do lead (pode ser null)
+</ResponseField>
+
+<ResponseField name="phone_number" type="string">
+  Telefone do lead
+</ResponseField>
+
+<ResponseField name="language" type="string">
+  Idioma preferido (pt-BR, en-US, es-ES)
+</ResponseField>
+
+<ResponseField name="confirmed_presence" type="boolean">
+  Se confirmou presenca no evento
+</ResponseField>
+
+<ResponseField name="contexto" type="string">
+  Orientacao para o proximo passo
+</ResponseField>
+
+```json
+{
+  "found": true,
+  "id": 123,
+  "name": "Joao Silva",
+  "email": "joao@email.com",
+  "phone_number": "+5511999999999",
+  "language": "pt-BR",
+  "confirmed_presence": true,
+  "interested_future_events": false,
+  "contexto": "Lead ja confirmou presenca. Pergunte se precisa de algo mais."
+}
+```
+
+## Response - Lead Nao Encontrado
+
+```json
+{
+  "found": false
+}
+```
+
+## Exemplo cURL
+
+```bash
+curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_lead_by_phone' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{"p_phone_number": "+5511999999999"}'
+```
+
+## Exemplo N8N Tool
+
+```json
+{
+  "name": "verificar_cadastro",
+  "toolDescription": "Use NO INICIO de cada conversa para verificar se lead existe",
+  "method": "POST",
+  "url": "https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_lead_by_phone",
+  "body": {
+    "p_phone_number": "={{ $json.contact.phone_number }}"
+  }
+}
+```
+
+## Logica de Uso
+
+```
+SE found = true:
+  → Use os dados retornados
+  → NAO pergunte nome, email se ja existem
+  → Siga o "contexto" para proximo passo
+
+SE found = false:
+  → Lead novo
+  → Colete nome, email, etc
+  → Siga fluxo normal
+```
+
+<Warning>
+  Execute SEMPRE antes de `get_events_by_language` e antes de qualquer resposta ao lead.
+</Warning>

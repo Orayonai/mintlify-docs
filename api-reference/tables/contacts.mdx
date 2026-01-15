@@ -1,0 +1,140 @@
+---
+title: 'Contacts'
+description: 'Operacoes REST na tabela whatsapp.contacts'
+---
+
+## Visao Geral
+
+A tabela `contacts` armazena os contatos do WhatsApp. Cada contato pertence a uma organizacao.
+
+## Schema
+
+```
+whatsapp.contacts
+```
+
+## Headers Obrigatorios
+
+```bash
+apikey: SUA_ANON_KEY
+Authorization: Bearer SUA_SERVICE_KEY
+Accept-Profile: whatsapp
+Content-Profile: whatsapp
+```
+
+---
+
+## GET - Buscar Contato por Telefone
+
+```
+GET /rest/v1/contacts?phone_number=eq.{telefone}
+```
+
+### Exemplo cURL
+
+```bash
+curl -X GET 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/contacts?phone_number=eq.5511999999999' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Accept-Profile: whatsapp'
+```
+
+### Response
+
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "organization_id": "org-uuid",
+    "phone_number": "5511999999999",
+    "name": "Joao Silva",
+    "email": "joao@email.com",
+    "source": "whatsapp",
+    "bypass_bots": false,
+    "created_at": "2026-01-10T10:00:00Z",
+    "updated_at": "2026-01-15T18:30:00Z"
+  }
+]
+```
+
+---
+
+## GET - Listar Contatos com Sessoes
+
+```
+GET /rest/v1/contacts?select=*,sessions(*)
+```
+
+### Exemplo
+
+```bash
+curl -X GET 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/contacts?select=*,sessions(*)&limit=10' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Accept-Profile: whatsapp'
+```
+
+---
+
+## PATCH - Atualizar Contato
+
+```
+PATCH /rest/v1/contacts?id=eq.{contact_id}
+```
+
+### Adicionar a Blacklist
+
+```bash
+curl -X PATCH 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/contacts?id=eq.550e8400-e29b-41d4-a716-446655440000' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Content-Profile: whatsapp' \
+  -H 'Content-Type: application/json' \
+  -d '{"bypass_bots": true}'
+```
+
+### Atualizar Nome
+
+```json
+{
+  "name": "Joao Silva Santos",
+  "email": "joao.novo@email.com"
+}
+```
+
+---
+
+## Campos da Tabela
+
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `id` | uuid | ID unico |
+| `organization_id` | uuid | Organizacao dona |
+| `phone_number` | text | Telefone (unico por org) |
+| `name` | text | Nome do contato |
+| `email` | text | Email (opcional) |
+| `source` | text | Origem (whatsapp, web) |
+| `bypass_bots` | boolean | Ignora IA se true |
+| `external_id` | text | ID externo (JID) |
+| `created_at` | timestamp | Criacao |
+| `updated_at` | timestamp | Atualizacao |
+
+---
+
+## Blacklist (bypass_bots)
+
+| Valor | Comportamento |
+|-------|---------------|
+| `false` | IA responde normalmente |
+| `true` | IA ignora, so humano atende |
+
+### Comandos para Blacklist
+
+No chat, agente pode usar:
+
+- `@blacklist` → Define `bypass_bots = true`
+- `@whitelist` → Define `bypass_bots = false`
+
+<Warning>
+  Contatos com `bypass_bots = true` nao recebem respostas automaticas da IA.
+</Warning>

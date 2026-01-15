@@ -1,0 +1,154 @@
+---
+title: 'Salvar Lead'
+api: 'POST /rest/v1/rpc/save_event_lead'
+description: 'Salva ou atualiza dados de um lead de evento'
+---
+
+## Objetivo
+
+Persistir os dados do lead apos confirmacao ou recusa de participacao no evento. Cria novo registro ou atualiza existente baseado no telefone.
+
+## Endpoint
+
+```
+POST https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/save_event_lead
+```
+
+## Headers
+
+```bash
+apikey: SUA_ANON_KEY
+Authorization: Bearer SUA_SERVICE_KEY
+Content-Type: application/json
+```
+
+## Request Body
+
+<ParamField body="p_contact_id" type="uuid" required>
+  ID do contato no sistema
+</ParamField>
+
+<ParamField body="p_name" type="string" required>
+  Nome do lead
+</ParamField>
+
+<ParamField body="p_phone_number" type="string" required>
+  Telefone no formato internacional
+</ParamField>
+
+<ParamField body="p_confirmed_presence" type="boolean" required>
+  `true` se confirmou presenca, `false` se recusou
+</ParamField>
+
+<ParamField body="p_email" type="string">
+  Email do lead (opcional)
+</ParamField>
+
+<ParamField body="p_interested_future_events" type="boolean">
+  `true` se quer saber de eventos futuros
+</ParamField>
+
+<ParamField body="p_language" type="string">
+  Idioma: `pt-BR`, `en-US`, `es-ES`
+</ParamField>
+
+<ParamField body="p_invited_by" type="string">
+  Nome de quem convidou o lead
+</ParamField>
+
+<ParamField body="p_evento_id" type="integer">
+  ID do evento (obtido de `get_events_by_language`)
+</ParamField>
+
+<ParamField body="p_session_id" type="uuid">
+  ID da sessao atual
+</ParamField>
+
+<ParamField body="p_chatwoot_conversation_id" type="integer">
+  ID da conversa no Chatwoot
+</ParamField>
+
+<ParamField body="p_chatwoot_account_id" type="integer">
+  ID da conta Chatwoot
+</ParamField>
+
+## Request Exemplo
+
+```json
+{
+  "p_contact_id": "550e8400-e29b-41d4-a716-446655440000",
+  "p_name": "Maria Santos",
+  "p_email": "maria@email.com",
+  "p_phone_number": "+5511888888888",
+  "p_confirmed_presence": true,
+  "p_interested_future_events": false,
+  "p_language": "pt-BR",
+  "p_invited_by": "Joao Silva",
+  "p_evento_id": 1,
+  "p_session_id": "123e4567-e89b-12d3-a456-426614174000",
+  "p_chatwoot_conversation_id": 12345,
+  "p_chatwoot_account_id": 1
+}
+```
+
+## Response - Sucesso
+
+```json
+{
+  "success": true,
+  "lead_id": 456,
+  "message": "Lead salvo com sucesso"
+}
+```
+
+## Response - Erro
+
+```json
+{
+  "success": false,
+  "error": "Campo p_name e obrigatorio"
+}
+```
+
+## Exemplo cURL
+
+```bash
+curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/save_event_lead' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "p_contact_id": "550e8400-e29b-41d4-a716-446655440000",
+    "p_name": "Maria Santos",
+    "p_phone_number": "+5511888888888",
+    "p_confirmed_presence": true
+  }'
+```
+
+## Exemplo N8N Tool
+
+```json
+{
+  "name": "salvar_lead",
+  "toolDescription": "Use APOS lead confirmar ou recusar participacao",
+  "method": "POST",
+  "url": "https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/save_event_lead",
+  "body": {
+    "p_contact_id": "={{ $json.contact_id }}",
+    "p_name": "={{ $fromAI('nome', 'Nome do lead', 'string') }}",
+    "p_confirmed_presence": "={{ $fromAI('confirmou', 'true ou false', 'boolean') }}",
+    "p_phone_number": "={{ $json.contact.phone_number }}"
+  }
+}
+```
+
+## Comportamento Upsert
+
+A funcao usa `ON CONFLICT` para atualizar se o telefone ja existe:
+
+- **Novo lead:** Cria registro completo
+- **Lead existente:** Atualiza apenas campos nao-nulos
+
+<Info>
+  Execute ANTES de enviar dados do Zoom ao lead, para garantir que o registro existe.
+</Info>

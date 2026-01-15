@@ -1,33 +1,83 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: 'Introducao a API'
+description: 'Visao geral da API Orayon - Supabase + N8N'
 ---
 
+## Base URLs
+
+| Ambiente | URL |
+|----------|-----|
+| **Supabase REST** | `https://tkrjfifrwttikwsghuju.supabase.co/rest/v1` |
+| **Supabase RPC** | `https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc` |
+| **Edge Functions** | `https://tkrjfifrwttikwsghuju.supabase.co/functions/v1` |
+| **Webhooks N8N** | `https://webhook.orayon.com.br/webhook` |
+
+## Autenticacao
+
+Todas as requisicoes requerem headers de autenticacao:
+
+```bash
+Authorization: Bearer SUA_SERVICE_KEY
+apikey: SUA_ANON_KEY
+Content-Type: application/json
+```
+
 <Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
+  Use `service_role` key para operacoes administrativas e `anon` key para operacoes publicas.
 </Note>
 
-## Welcome
+## Schemas Disponiveis
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+| Schema | Descricao | Headers |
+|--------|-----------|---------|
+| `public` | Leads, eventos, configuracoes | Nenhum adicional |
+| `whatsapp` | Sessoes, contatos, mensagens | `Accept-Profile: whatsapp` |
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+## Tipos de Endpoints
 
-## Authentication
+<CardGroup cols={2}>
+  <Card title="RPC Functions" icon="function" href="/api-reference/rpc/get-lead">
+    Funcoes do banco de dados
+  </Card>
+  <Card title="REST Tables" icon="table" href="/api-reference/tables/sessions">
+    Operacoes CRUD em tabelas
+  </Card>
+  <Card title="Edge Functions" icon="bolt" href="/api-reference/edge/process-message">
+    Funcoes serverless
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/api-reference/webhooks/transferir-humano">
+    Endpoints N8N
+  </Card>
+</CardGroup>
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+## Formato de Resposta
+
+Todas as respostas sao em JSON:
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+{
+  "success": true,
+  "data": { ... },
+  "error": null
+}
 ```
+
+## Codigos de Status
+
+| Codigo | Descricao |
+|--------|-----------|
+| `200` | Sucesso |
+| `201` | Criado com sucesso |
+| `400` | Requisicao invalida |
+| `401` | Nao autorizado |
+| `404` | Nao encontrado |
+| `409` | Conflito (registro duplicado) |
+| `500` | Erro interno |
+
+## Rate Limiting
+
+| Servico | Limite |
+|---------|--------|
+| Supabase REST | 1000 req/min |
+| Edge Functions | 500 req/min |
+| Webhooks N8N | Sem limite |

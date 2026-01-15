@@ -1,0 +1,95 @@
+---
+title: 'Buscar Sessao'
+api: 'POST /rest/v1/rpc/get_or_create_session_with_last_message'
+description: 'Busca ou cria sessao para um contato'
+---
+
+## Objetivo
+
+Obter a sessao ativa de um contato ou criar uma nova se nao existir. Retorna tambem a ultima mensagem da sessao.
+
+## Endpoint
+
+```
+POST https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_or_create_session_with_last_message
+```
+
+## Headers
+
+```bash
+apikey: SUA_ANON_KEY
+Authorization: Bearer SUA_SERVICE_KEY
+Content-Type: application/json
+```
+
+## Request Body
+
+<ParamField body="p_phone_number" type="string" required>
+  Telefone do contato
+</ParamField>
+
+<ParamField body="p_chatwoot_conversation_id" type="string">
+  ID da conversa no Chatwoot (opcional)
+</ParamField>
+
+<ParamField body="p_contact_name" type="string">
+  Nome do contato (opcional)
+</ParamField>
+
+```json
+{
+  "p_phone_number": "+5511999999999",
+  "p_chatwoot_conversation_id": "12345",
+  "p_contact_name": "Joao Silva"
+}
+```
+
+## Response
+
+```json
+{
+  "session_id": "123e4567-e89b-12d3-a456-426614174000",
+  "status": "OPEN",
+  "contact_id": "550e8400-e29b-41d4-a716-446655440000",
+  "last_message": "Ola, preciso de ajuda",
+  "last_message_at": "2026-01-15T18:30:00Z",
+  "created": false
+}
+```
+
+## Campos da Response
+
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `session_id` | uuid | ID da sessao |
+| `status` | string | OPEN, PAUSED, CLOSED |
+| `contact_id` | uuid | ID do contato |
+| `last_message` | string | Texto da ultima mensagem |
+| `last_message_at` | timestamp | Data da ultima mensagem |
+| `created` | boolean | `true` se foi criada nova |
+
+## Exemplo cURL
+
+```bash
+curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_or_create_session_with_last_message' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "p_phone_number": "+5511999999999"
+  }'
+```
+
+## Funcao Alternativa
+
+Para apenas buscar por telefone sem criar:
+
+```
+POST /rest/v1/rpc/get_or_create_session_by_phone
+```
+
+```json
+{
+  "p_phone_number": "+5511999999999"
+}
+```

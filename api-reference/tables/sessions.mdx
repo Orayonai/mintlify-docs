@@ -1,0 +1,144 @@
+---
+title: 'Sessions'
+description: 'Operacoes REST na tabela whatsapp.sessions'
+---
+
+## Visao Geral
+
+A tabela `sessions` armazena as sessoes de conversa do WhatsApp. Cada sessao representa uma interacao com um contato.
+
+## Schema
+
+```
+whatsapp.sessions
+```
+
+## Headers Obrigatorios
+
+```bash
+apikey: SUA_ANON_KEY
+Authorization: Bearer SUA_SERVICE_KEY
+Content-Type: application/json
+Accept-Profile: whatsapp
+Content-Profile: whatsapp
+```
+
+---
+
+## GET - Listar Sessoes
+
+```
+GET /rest/v1/sessions
+```
+
+### Query Parameters
+
+| Parametro | Exemplo | Descricao |
+|-----------|---------|-----------|
+| `status` | `eq.OPEN` | Filtrar por status |
+| `contact_id` | `eq.uuid` | Filtrar por contato |
+| `select` | `*` | Campos a retornar |
+| `order` | `created_at.desc` | Ordenacao |
+| `limit` | `10` | Limite de registros |
+
+### Exemplo cURL
+
+```bash
+curl -X GET 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/sessions?status=eq.OPEN&limit=10' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Accept-Profile: whatsapp'
+```
+
+### Response
+
+```json
+[
+  {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "contact_id": "550e8400-e29b-41d4-a716-446655440000",
+    "status": "OPEN",
+    "started_by": "CUSTOMER",
+    "created_at": "2026-01-15T18:00:00Z",
+    "last_activity": "2026-01-15T18:30:00Z",
+    "expires_at": "2026-01-16T18:00:00Z",
+    "whatsapp_window_expires_at": "2026-01-16T18:30:00Z"
+  }
+]
+```
+
+---
+
+## PATCH - Atualizar Sessao
+
+```
+PATCH /rest/v1/sessions?id=eq.{session_id}
+```
+
+### Fechar Sessao
+
+```bash
+curl -X PATCH 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/sessions?id=eq.123e4567-e89b-12d3-a456-426614174000' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Content-Profile: whatsapp' \
+  -H 'Accept-Profile: whatsapp' \
+  -H 'Prefer: return=representation' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "status": "CLOSED",
+    "end_reason": "AGENT_RESOLVED",
+    "expires_at": "2026-01-15T20:00:00Z"
+  }'
+```
+
+### Pausar Sessao
+
+```json
+{
+  "status": "PAUSED",
+  "paused_until": "2026-01-15T22:00:00Z"
+}
+```
+
+### Reabrir Sessao
+
+```json
+{
+  "status": "OPEN",
+  "paused_until": null
+}
+```
+
+---
+
+## Campos da Tabela
+
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `id` | uuid | ID unico da sessao |
+| `contact_id` | uuid | ID do contato |
+| `organization_id` | uuid | ID da organizacao |
+| `status` | text | OPEN, PAUSED, CLOSED |
+| `started_by` | text | CUSTOMER, AGENT, AI |
+| `end_reason` | text | Motivo do encerramento |
+| `created_at` | timestamp | Data de criacao |
+| `last_activity` | timestamp | Ultima atividade |
+| `expires_at` | timestamp | Expiracao da sessao |
+| `paused_until` | timestamp | Pausada ate |
+| `whatsapp_window_expires_at` | timestamp | Janela 24h |
+| `chatwoot_conversation_id` | integer | ID conversa Chatwoot |
+
+---
+
+## Status da Sessao
+
+| Status | IA Responde? | Descricao |
+|--------|--------------|-----------|
+| `OPEN` | Sim | Sessao ativa |
+| `PAUSED` | Nao | Humano assumiu |
+| `CLOSED` | Nao | Encerrada |
+
+<Info>
+  Ao fechar sessao com `@fechar`, a memoria do agente no Redis tambem e limpa automaticamente.
+</Info>

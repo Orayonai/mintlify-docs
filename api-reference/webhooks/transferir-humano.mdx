@@ -1,0 +1,137 @@
+---
+title: 'Transferir Humano'
+description: 'Webhook N8N para transferencia de atendimento'
+---
+
+## Visao Geral
+
+Endpoint webhook do N8N para pausar sessao e notificar Chatwoot quando lead solicita atendimento humano.
+
+## Endpoint
+
+```
+POST https://webhook.orayon.com.br/webhook/humanoIris
+```
+
+## Headers
+
+```bash
+Content-Type: application/json
+```
+
+---
+
+## Request Body
+
+<ParamField body="p_phone_number" type="string" required>
+  Telefone do cliente
+</ParamField>
+
+<ParamField body="p_hours" type="integer" required>
+  Horas para pausar (ex: 72)
+</ParamField>
+
+<ParamField body="p_owner_phone" type="string" required>
+  Telefone do WhatsApp Business
+</ParamField>
+
+<ParamField body="account_id" type="integer" required>
+  ID da conta Chatwoot
+</ParamField>
+
+<ParamField body="conversation_id" type="integer" required>
+  ID da conversa Chatwoot
+</ParamField>
+
+```json
+{
+  "p_phone_number": "+5511999999999",
+  "p_hours": 72,
+  "p_owner_phone": "554147414147",
+  "account_id": 1,
+  "conversation_id": 12345
+}
+```
+
+---
+
+## Response
+
+```json
+{
+  "success": true,
+  "message": "Sessao pausada e agente notificado",
+  "paused_until": "2026-01-18T18:00:00Z"
+}
+```
+
+---
+
+## Exemplo cURL
+
+```bash
+curl -X POST 'https://webhook.orayon.com.br/webhook/humanoIris' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "p_phone_number": "+5511999999999",
+    "p_hours": 72,
+    "p_owner_phone": "554147414147",
+    "account_id": 1,
+    "conversation_id": 12345
+  }'
+```
+
+---
+
+## Exemplo N8N Tool
+
+```json
+{
+  "name": "transferir_humano",
+  "toolDescription": "Use quando lead pedir para falar com humano ou quando nao souber responder",
+  "method": "POST",
+  "url": "https://webhook.orayon.com.br/webhook/humanoIris",
+  "body": {
+    "p_phone_number": "={{ $json.contact.phone_number }}",
+    "p_hours": 72,
+    "p_owner_phone": "554147414147",
+    "account_id": "={{ $json.session.chatwoot_account_id }}",
+    "conversation_id": "={{ $json.session.chatwoot_conversation_id }}"
+  }
+}
+```
+
+---
+
+## O que o Webhook Faz
+
+1. **Pausa a sessao** no Supabase (status = PAUSED)
+2. **Adiciona nota** na conversa do Chatwoot
+3. **Notifica agente** via Chatwoot (label ou assignment)
+4. **Retorna confirmacao**
+
+---
+
+## Integracao Chatwoot
+
+O webhook pode executar acoes no Chatwoot:
+
+- Adicionar label "humano_solicitado"
+- Atribuir para equipe especifica
+- Adicionar nota interna
+- Enviar notificacao
+
+---
+
+## Quando Usar
+
+| Situacao | Acao |
+|----------|------|
+| Lead pede humano | Transferir imediatamente |
+| IA nao sabe responder | Transferir com contexto |
+| Assunto sensivel | Transferir para especialista |
+| Reclamacao seria | Transferir para supervisor |
+
+<Info>
+  Apos transferencia, a IA nao responde mais ate que a sessao seja reaberta com `@reabrir`.
+</Info>

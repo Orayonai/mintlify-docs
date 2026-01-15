@@ -1,0 +1,154 @@
+---
+title: 'Messages'
+description: 'Operacoes REST na tabela whatsapp.messages'
+---
+
+## Visao Geral
+
+A tabela `messages` armazena todas as mensagens trocadas nas sessoes WhatsApp.
+
+## Schema
+
+```
+whatsapp.messages
+```
+
+## Headers Obrigatorios
+
+```bash
+apikey: SUA_ANON_KEY
+Authorization: Bearer SUA_SERVICE_KEY
+Accept-Profile: whatsapp
+Content-Profile: whatsapp
+```
+
+---
+
+## GET - Listar Mensagens de uma Sessao
+
+```
+GET /rest/v1/messages?session_id=eq.{session_id}&order=created_at.asc
+```
+
+### Exemplo cURL
+
+```bash
+curl -X GET 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/messages?session_id=eq.123e4567-e89b-12d3-a456-426614174000&order=created_at.asc&limit=50' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Accept-Profile: whatsapp'
+```
+
+### Response
+
+```json
+[
+  {
+    "id": "msg-uuid-1",
+    "session_id": "123e4567-e89b-12d3-a456-426614174000",
+    "direction": "IN",
+    "author": "CUSTOMER",
+    "message_type": "TEXT",
+    "message_text": "Ola, preciso de ajuda",
+    "created_at": "2026-01-15T18:00:00Z"
+  },
+  {
+    "id": "msg-uuid-2",
+    "session_id": "123e4567-e89b-12d3-a456-426614174000",
+    "direction": "OUT",
+    "author": "AI",
+    "message_type": "TEXT",
+    "message_text": "Ola! Como posso ajudar?",
+    "created_at": "2026-01-15T18:00:15Z"
+  }
+]
+```
+
+---
+
+## GET - Buscar Mensagens de Audio
+
+```
+GET /rest/v1/messages?message_type=eq.AUDIO&select=id,message_text,media_url
+```
+
+---
+
+## POST - Inserir Mensagem
+
+```
+POST /rest/v1/messages
+```
+
+### Request Body
+
+```json
+{
+  "session_id": "123e4567-e89b-12d3-a456-426614174000",
+  "direction": "OUT",
+  "author": "AI",
+  "message_type": "TEXT",
+  "message_text": "Sua consulta foi agendada!",
+  "external_id": "wamid.xxx"
+}
+```
+
+### Exemplo cURL
+
+```bash
+curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/messages' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Content-Profile: whatsapp' \
+  -H 'Prefer: return=representation' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "session_id": "123e4567-e89b-12d3-a456-426614174000",
+    "direction": "OUT",
+    "author": "AI",
+    "message_type": "TEXT",
+    "message_text": "Mensagem de teste"
+  }'
+```
+
+---
+
+## Campos da Tabela
+
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `id` | uuid | ID unico |
+| `session_id` | uuid | Sessao da mensagem |
+| `direction` | text | IN (entrada) ou OUT (saida) |
+| `author` | text | CUSTOMER, AGENT, AI |
+| `message_type` | text | TEXT, AUDIO, IMAGE, etc |
+| `message_text` | text | Conteudo da mensagem |
+| `media_url` | text | URL da midia |
+| `media_mimetype` | text | Tipo MIME |
+| `external_id` | text | ID do WhatsApp (wamid) |
+| `created_at` | timestamp | Data/hora |
+
+---
+
+## Tipos de Mensagem
+
+| Tipo | Descricao |
+|------|-----------|
+| `TEXT` | Texto simples |
+| `AUDIO` | Audio/voz |
+| `IMAGE` | Imagem |
+| `VIDEO` | Video |
+| `DOCUMENT` | PDF, DOC, etc |
+| `STICKER` | Figurinha |
+| `LOCATION` | Localizacao |
+
+---
+
+## Autores
+
+| Author | Descricao |
+|--------|-----------|
+| `CUSTOMER` | Cliente enviou |
+| `AGENT` | Humano respondeu |
+| `AI` | IA respondeu |
+| `SYSTEM` | Mensagem de sistema |

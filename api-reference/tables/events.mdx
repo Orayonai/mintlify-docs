@@ -1,0 +1,150 @@
+---
+title: 'Eventos'
+description: 'Operacoes REST na tabela tb_eventos'
+---
+
+## Visao Geral
+
+A tabela `tb_eventos` armazena informacoes dos eventos (reunioes Zoom, webinars, etc).
+
+## Schema
+
+```
+public.tb_eventos
+```
+
+---
+
+## GET - Buscar Evento por ID
+
+```
+GET /rest/v1/tb_eventos?id=eq.{id}
+```
+
+### Exemplo cURL
+
+```bash
+curl -X GET 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/tb_eventos?id=eq.1' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY'
+```
+
+### Response
+
+```json
+[
+  {
+    "id": 1,
+    "data": "Quinta-feira, 16 de janeiro",
+    "horario": "20:00 - 21:00",
+    "link": "https://link.orayon.com.br/event-zoom",
+    "zoom_id": "824 5570 3323",
+    "zoom_senha": "364350",
+    "idioma": "pt-BR",
+    "titulo": "Evento Semanal Orayon",
+    "descricao": "Apresentacao semanal",
+    "ativo": true,
+    "created_at": "2026-01-01T00:00:00Z",
+    "updated_at": "2026-01-15T10:00:00Z"
+  }
+]
+```
+
+---
+
+## GET - Listar Eventos Ativos
+
+```
+GET /rest/v1/tb_eventos?ativo=eq.true&order=data.asc
+```
+
+---
+
+## PATCH - Atualizar Evento
+
+```
+PATCH /rest/v1/tb_eventos?id=eq.{id}
+```
+
+### Atualizar Data e Link
+
+```bash
+curl -X PATCH 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/tb_eventos?id=eq.1' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Prefer: return=representation' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "data": "Quinta-feira, 23 de janeiro",
+    "horario": "20:00 - 21:00",
+    "link": "https://zoom.us/j/novoid",
+    "zoom_id": "999 8888 7777",
+    "zoom_senha": "123456"
+  }'
+```
+
+---
+
+## POST - Criar Novo Evento
+
+```
+POST /rest/v1/tb_eventos
+```
+
+### Request Body
+
+```json
+{
+  "data": "Sexta-feira, 17 de janeiro",
+  "horario": "19:00 - 20:00",
+  "link": "https://zoom.us/j/especial",
+  "zoom_id": "111 2222 3333",
+  "zoom_senha": "654321",
+  "idioma": "en-US",
+  "titulo": "Special Event",
+  "descricao": "English presentation",
+  "ativo": true
+}
+```
+
+---
+
+## Campos da Tabela
+
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `id` | integer | ID unico (auto) |
+| `data` | text | Data formatada |
+| `horario` | text | Horario do evento |
+| `link` | text | Link de acesso |
+| `zoom_id` | text | ID da reuniao Zoom |
+| `zoom_senha` | text | Senha do Zoom |
+| `idioma` | text | pt-BR, en-US, es-ES |
+| `titulo` | text | Titulo do evento |
+| `descricao` | text | Descricao |
+| `ativo` | boolean | Evento ativo |
+| `created_at` | timestamp | Criacao |
+| `updated_at` | timestamp | Atualizacao |
+
+---
+
+## Exemplo N8N - Atualizar Evento
+
+```json
+{
+  "method": "PATCH",
+  "url": "https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/tb_eventos",
+  "queryParameters": [
+    { "name": "id", "value": "eq.1" }
+  ],
+  "body": {
+    "data": "{{ $json.nova_data }}",
+    "horario": "{{ $json.novo_horario }}",
+    "link": "{{ $json.novo_link }}"
+  }
+}
+```
+
+<Note>
+  Use a funcao RPC `get_events_by_language` para buscar eventos formatados para o agente IA.
+</Note>
