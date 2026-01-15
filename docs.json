@@ -44,6 +44,16 @@
               "ai-tools/claude-code",
               "ai-tools/windsurf"
             ]
+          },
+          {
+            "group": "N8N Agent",
+            "pages": [
+              "guides/n8n-agent/quickstart",
+              "guides/n8n-agent/config-variables",
+              "guides/n8n-agent/meta-api",
+              "guides/n8n-agent/uazapi",
+              "guides/n8n-agent/responses"
+            ]
           }
         ]
       },

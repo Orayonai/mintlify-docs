@@ -1,0 +1,158 @@
+---
+title: 'Configurar Agente N8N'
+description: 'Guia passo a passo para configurar seu Agente de WhatsApp no N8N'
+icon: 'rocket'
+---
+
+## Visao Geral
+
+Este guia mostra como configurar o **Agente de WhatsApp** no N8N, conectando com Supabase Edge Functions para processar mensagens automaticamente.
+
+<Info>
+  **Requisitos:**
+  - Conta N8N (self-hosted ou cloud)
+  - Projeto Supabase com Edge Functions
+  - WhatsApp Business API (META) ou UAZAPI/Evolution
+</Info>
+
+---
+
+## Arquitetura do Sistema
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  WhatsApp   │────▶│    N8N      │────▶│  Supabase   │
+│  (Webhook)  │     │  Workflow   │     │  Edge Fn    │
+└─────────────┘     └─────────────┘     └─────────────┘
+                          │                    │
+                          ▼                    ▼
+                    ┌─────────────┐     ┌─────────────┐
+                    │   Config    │     │   OpenAI    │
+                    │   (Set)     │     │   + Redis   │
+                    └─────────────┘     └─────────────┘
+```
+
+---
+
+## Passo 1: Importar o Workflow
+
+1. No N8N, clique em **Add workflow**
+2. Clique nos 3 pontos **(...)**  e selecione **Import from file**
+3. Importe o arquivo JSON do workflow
+
+<Tip>
+  Solicite o arquivo JSON do workflow para sua equipe ou baixe do repositorio.
+</Tip>
+
+---
+
+## Passo 2: Configurar o No "Config"
+
+O no **Config** (tipo Set) contem todas as variaveis do sistema. Clique nele para editar:
+
+<Frame>
+  <img src="/images/n8n-config-node.png" alt="No Config no N8N" />
+</Frame>
+
+### Variaveis Obrigatorias
+
+| Variavel | Descricao | Exemplo |
+|----------|-----------|---------|
+| `EmpresaNome` | Nome da organizacao no Supabase | `MinhaEmpresa` |
+| `OwnerPhone` | Telefone do WhatsApp Business | `5511999999999` |
+| `SUPABASE_URL` | URL do projeto Supabase | `https://xxx.supabase.co` |
+| `SUPABASE_ANON_KEY` | Chave anonima do Supabase | `eyJhbG...` |
+
+### Variaveis de Sessao
+
+| Variavel | Descricao | Padrao |
+|----------|-----------|--------|
+| `SessionTimeout` | Horas ate sessao expirar | `24` |
+| `BufferTimeout` | Segundos para agrupar mensagens | `9` |
+
+### Credenciais de IA
+
+| Variavel | Descricao | Onde obter |
+|----------|-----------|------------|
+| `openai_api_key` | API Key da OpenAI | [platform.openai.com](https://platform.openai.com/api-keys) |
+| `redis_url` | URL do Redis/Upstash | [upstash.com](https://upstash.com) |
+| `redis_token` | Token do Redis | Console Upstash |
+
+---
+
+## Passo 3: Escolher API de Envio
+
+O sistema suporta duas APIs para enviar mensagens:
+
+<CardGroup cols={2}>
+  <Card title="META Cloud API" icon="meta" href="/guides/n8n-agent/meta-api">
+    API oficial do WhatsApp Business. Mais estavel, requer aprovacao da Meta.
+  </Card>
+  <Card title="UAZAPI / Evolution" icon="robot" href="/guides/n8n-agent/uazapi">
+    APIs nao-oficiais. Mais flexivel, configuracao rapida.
+  </Card>
+</CardGroup>
+
+### Configurar UnderlyingAPI
+
+No no Config, defina qual API usar:
+
+```json
+{
+  "UnderlyingAPI": "META"    // ou "UAZAPI"
+}
+```
+
+---
+
+## Passo 4: Configurar Webhook
+
+### Para META Cloud API
+
+1. Va em [Meta for Developers](https://developers.facebook.com)
+2. Selecione seu App
+3. Em **WhatsApp** > **Configuration** > **Webhook**
+4. Configure a URL do seu N8N:
+
+```
+https://seu-n8n.com/webhook/whatsapp
+```
+
+### Para UAZAPI/Evolution
+
+Configure o webhook na sua instancia apontando para:
+
+```
+https://seu-n8n.com/webhook/whatsapp
+```
+
+---
+
+## Passo 5: Testar
+
+1. Ative o workflow no N8N
+2. Envie uma mensagem para o numero do WhatsApp
+3. Verifique os logs no N8N
+
+<Check>
+  Se tudo estiver configurado, voce vera a mensagem sendo processada e a resposta sendo enviada automaticamente.
+</Check>
+
+---
+
+## Proximos Passos
+
+<CardGroup cols={2}>
+  <Card title="Configurar META API" icon="key" href="/guides/n8n-agent/meta-api">
+    Obter META_TOKEN e PhoneNumberId
+  </Card>
+  <Card title="Configurar UAZAPI" icon="plug" href="/guides/n8n-agent/uazapi">
+    Configurar API nao-oficial
+  </Card>
+  <Card title="Variaveis Config" icon="gear" href="/guides/n8n-agent/config-variables">
+    Referencia completa de variaveis
+  </Card>
+  <Card title="Responses" icon="code" href="/guides/n8n-agent/responses">
+    Exemplos de request/response
+  </Card>
+</CardGroup>

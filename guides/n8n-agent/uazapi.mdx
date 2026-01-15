@@ -1,0 +1,276 @@
+---
+title: 'UAZAPI / Evolution'
+description: 'Como configurar APIs nao-oficiais do WhatsApp'
+icon: 'robot'
+---
+
+## Visao Geral
+
+**UAZAPI** e **Evolution API** sao alternativas nao-oficiais para conectar ao WhatsApp. Elas oferecem:
+
+- Configuracao mais rapida
+- Sem necessidade de aprovacao da Meta
+- Suporte a grupos
+- Mais recursos (enquetes, reacoes, etc)
+
+<Warning>
+  APIs nao-oficiais podem ser bloqueadas pelo WhatsApp. Use por sua conta e risco.
+</Warning>
+
+---
+
+## Escolha sua API
+
+<CardGroup cols={2}>
+  <Card title="UAZAPI" icon="cloud">
+    Servico hospedado, pronto para usar. Pago por mensagem.
+
+    [uazapi.com](https://uazapi.com)
+  </Card>
+  <Card title="Evolution API" icon="server">
+    Self-hosted, codigo aberto. Voce hospeda.
+
+    [evolution-api.com](https://evolution-api.com)
+  </Card>
+</CardGroup>
+
+---
+
+## Configurar UAZAPI
+
+### Passo 1: Criar Conta
+
+1. Acesse [uazapi.com](https://uazapi.com)
+2. Crie uma conta
+3. Adicione creditos
+
+### Passo 2: Criar Instancia
+
+1. No dashboard, clique **Nova Instancia**
+2. Escaneie o QR Code com seu WhatsApp
+3. Aguarde a conexao
+
+### Passo 3: Obter Credenciais
+
+Apos conectar, voce tera:
+
+| Campo | Onde encontrar |
+|-------|----------------|
+| **Base URL** | URL da API (ex: `https://api.uazapi.com`) |
+| **Token** | Dashboard > Instancia > Token |
+
+### Passo 4: Configurar no N8N
+
+```json
+{
+  "UnderlyingAPI": "UAZAPI",
+  "UAZAPI_BASE_URL": "https://api.uazapi.com",
+  "UAZAPI_TOKEN": "seu-token-aqui"
+}
+```
+
+---
+
+## Configurar Evolution API
+
+### Passo 1: Instalar
+
+```bash
+# Docker
+docker run -d \
+  --name evolution-api \
+  -p 8080:8080 \
+  -e AUTHENTICATION_API_KEY=sua-chave-admin \
+  atendai/evolution-api:latest
+```
+
+Ou use o [guia de instalacao oficial](https://doc.evolution-api.com).
+
+### Passo 2: Criar Instancia
+
+```bash
+curl -X POST "https://sua-evolution.com/instance/create" \
+  -H "apikey: sua-chave-admin" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instanceName": "minha-instancia",
+    "qrcode": true
+  }'
+```
+
+### Passo 3: Conectar WhatsApp
+
+1. Acesse o manager: `https://sua-evolution.com/manager`
+2. Selecione a instancia
+3. Escaneie o QR Code
+
+### Passo 4: Configurar Webhook
+
+```bash
+curl -X POST "https://sua-evolution.com/webhook/set/minha-instancia" \
+  -H "apikey: sua-chave-admin" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://seu-n8n.com/webhook/whatsapp",
+    "webhook_by_events": false,
+    "events": [
+      "MESSAGES_UPSERT"
+    ]
+  }'
+```
+
+### Passo 5: Configurar no N8N
+
+```json
+{
+  "UnderlyingAPI": "UAZAPI",
+  "UAZAPI_BASE_URL": "https://sua-evolution.com",
+  "UAZAPI_TOKEN": "sua-chave-admin"
+}
+```
+
+<Tip>
+  Evolution API usa o mesmo formato que UAZAPI, entao configure como `"UAZAPI"`.
+</Tip>
+
+---
+
+## Funcionalidades Extras
+
+APIs nao-oficiais suportam recursos que a META nao oferece:
+
+### Grupos
+
+```json
+{
+  "is_group": true,
+  "group_id": "120363123456789012@g.us",
+  "group_participant": "5511999999999@s.whatsapp.net",
+  "group_name": "Meu Grupo"
+}
+```
+
+### Reacoes
+
+```json
+{
+  "is_reaction": true,
+  "reaction_emoji": "👍",
+  "reaction_target_id": "3EB0A123456789"
+}
+```
+
+### Enquetes
+
+```json
+{
+  "is_poll": true,
+  "poll_question": "Qual sua cor favorita?",
+  "poll_options": ["Azul", "Vermelho", "Verde"]
+}
+```
+
+### Mensagens Citadas (Reply)
+
+```json
+{
+  "is_reply": true,
+  "quoted_message_id": "3EB0A123456789",
+  "quoted_text": "Mensagem original aqui"
+}
+```
+
+---
+
+## Indicador "Digitando..."
+
+Para mostrar que o bot esta "digitando...", a Evolution API usa:
+
+```bash
+POST /chat/presence/minha-instancia
+{
+  "number": "5511999999999",
+  "presence": "composing"
+}
+```
+
+O sistema envia isso automaticamente antes de processar a mensagem.
+
+---
+
+## Exemplo de Webhook Recebido
+
+Quando alguem envia mensagem, a Evolution envia:
+
+```json
+{
+  "event": "messages.upsert",
+  "instance": "minha-instancia",
+  "data": {
+    "key": {
+      "remoteJid": "5511999999999@s.whatsapp.net",
+      "fromMe": false,
+      "id": "3EB0A123456789ABCDEF"
+    },
+    "pushName": "Joao",
+    "message": {
+      "conversation": "Ola, preciso de ajuda!"
+    },
+    "messageTimestamp": 1705327200
+  }
+}
+```
+
+O no **Extrair Dados** normaliza isso automaticamente.
+
+---
+
+## Comparativo META vs UAZAPI
+
+| Recurso | META | UAZAPI/Evolution |
+|---------|------|------------------|
+| Grupos | Nao | Sim |
+| Enquetes | Nao | Sim |
+| Reacoes | Limitado | Completo |
+| Mensagens citadas | Sim | Sim |
+| "Digitando..." | Sim | Sim |
+| Aprovacao Meta | Necessaria | Nao |
+| Risco de bloqueio | Baixo | Medio |
+| Custo | Por mensagem | Self-hosted gratis |
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="QR Code nao aparece">
+    Reinicie a instancia e tente novamente. Verifique os logs.
+  </Accordion>
+
+  <Accordion title="Webhook nao recebe mensagens">
+    1. Verifique se a URL do webhook esta correta
+    2. Confirme que o evento `MESSAGES_UPSERT` esta ativo
+    3. Teste com `curl` direto na URL do N8N
+  </Accordion>
+
+  <Accordion title="Instancia desconecta">
+    Isso pode acontecer se outro dispositivo acessar o WhatsApp Web. Reconecte escaneando o QR novamente.
+  </Accordion>
+
+  <Accordion title="Mensagens nao enviam">
+    Verifique o token e a URL base. Teste enviando uma mensagem manual via API.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Proximos Passos
+
+<CardGroup cols={2}>
+  <Card title="Voltar ao Quickstart" icon="arrow-left" href="/guides/n8n-agent/quickstart">
+    Continuar configuracao
+  </Card>
+  <Card title="Ver Responses" icon="code" href="/guides/n8n-agent/responses">
+    Exemplos de request/response
+  </Card>
+</CardGroup>

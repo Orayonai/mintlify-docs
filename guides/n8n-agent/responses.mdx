@@ -1,0 +1,383 @@
+---
+title: 'Request & Response'
+description: 'Exemplos completos de requisicoes e respostas da Edge Function'
+icon: 'code'
+---
+
+## Visao Geral
+
+Esta pagina documenta os formatos de **request** e **response** da Edge Function `process-message`.
+
+---
+
+## Endpoint
+
+```
+POST {SUPABASE_URL}/functions/v1/process-message
+```
+
+### Headers
+
+```
+Authorization: Bearer {SUPABASE_ANON_KEY}
+Content-Type: application/json
+```
+
+---
+
+## Request - Mensagem de Texto
+
+<CodeGroup>
+```json Request
+{
+  "organization_name": "MinhaEmpresa",
+  "business_phone": "5511999999999",
+  "integration_token": "",
+  "session_timeout": 24,
+
+  "phone_number": "5511888888888",
+  "contact_name": "Joao Silva",
+  "external_id": "5511888888888@s.whatsapp.net",
+
+  "message_type": "TEXT",
+  "message_text": "Ola, preciso de ajuda com meu pedido",
+  "message_content": {
+    "type": "TEXT",
+    "text": "Ola, preciso de ajuda com meu pedido"
+  },
+  "direction": "IN",
+  "author": "CUSTOMER",
+  "message_id": "wamid.HBgNNTUxMTk5OTk5OTk5FQ",
+
+  "webhook_format": "OFICIAL",
+  "underlying_api": "META",
+  "autorizacao_oficial": "EAFtabZAICSRk...",
+  "phone_number_id_OFICIAL": "903845722807525",
+
+  "openai_api_key": "sk-proj-...",
+  "redis_url": "redis-17472.xxx.com:17472",
+  "redis_token": "PB3urpo2fv...",
+  "buffer_timeout_seconds": 9
+}
+```
+
+```json Response - Sucesso
+{
+  "success": true,
+  "session_id": "550e8400-e29b-41d4-a716-446655440000",
+  "contact_id": "123e4567-e89b-12d3-a456-426614174000",
+  "message_saved": true,
+  "ai_response": "Ola Joao! Claro, posso te ajudar. Qual o numero do seu pedido?",
+  "ai_response_sent": true,
+  "processing_time_ms": 1250,
+  "buffer_status": "processed"
+}
+```
+
+```json Response - Buffered
+{
+  "success": true,
+  "buffered": true,
+  "buffer_key": "buffer:5511888888888",
+  "message": "Mensagem adicionada ao buffer. Aguardando mais mensagens...",
+  "buffer_count": 2,
+  "buffer_ttl": 7
+}
+```
+</CodeGroup>
+
+---
+
+## Request - Audio
+
+<CodeGroup>
+```json Request
+{
+  "organization_name": "MinhaEmpresa",
+  "phone_number": "5511888888888",
+  "contact_name": "Joao Silva",
+
+  "message_type": "AUDIO",
+  "message_text": "",
+  "message_content": {
+    "type": "AUDIO",
+    "text": ""
+  },
+
+  "media_url": "https://mmg.whatsapp.net/o1/v/t62.7114-24/...",
+  "media_id": "1234567890",
+  "media_mimetype": "audio/ogg; codecs=opus",
+  "media_duration": 15,
+
+  "openai_api_key": "sk-proj-...",
+  "underlying_api": "META",
+  "autorizacao_oficial": "EAFtabZAICSRk...",
+  "phone_number_id_OFICIAL": "903845722807525"
+}
+```
+
+```json Response
+{
+  "success": true,
+  "session_id": "550e8400-e29b-41d4-a716-446655440000",
+  "message_saved": true,
+  "transcription": "Ola, gostaria de saber sobre o evento de amanha",
+  "ai_response": "Oi Joao! O evento de amanha sera as 20h. Posso confirmar sua presenca?",
+  "ai_response_sent": true,
+  "media_processed": true
+}
+```
+</CodeGroup>
+
+---
+
+## Request - Imagem
+
+<CodeGroup>
+```json Request
+{
+  "organization_name": "MinhaEmpresa",
+  "phone_number": "5511888888888",
+  "contact_name": "Maria Santos",
+
+  "message_type": "IMAGE",
+  "message_text": "Segue o comprovante",
+  "message_content": {
+    "type": "IMAGE",
+    "text": "Segue o comprovante"
+  },
+
+  "media_url": "https://mmg.whatsapp.net/o1/v/t62.7114-24/...",
+  "media_id": "9876543210",
+  "media_mimetype": "image/jpeg",
+
+  "openai_api_key": "sk-proj-...",
+  "image_prompt": "Analise esta imagem. Extraia todo texto visivel e descreva o conteudo.",
+  "vision_model": "gpt-4o-mini",
+  "media_processing_enabled": true
+}
+```
+
+```json Response
+{
+  "success": true,
+  "message_saved": true,
+  "image_analysis": {
+    "description": "Comprovante de pagamento bancario. Valor: R$ 150,00. Data: 15/01/2026. Destinatario: Empresa XYZ.",
+    "extracted_text": "COMPROVANTE DE TRANSFERENCIA\nValor: R$ 150,00\nData: 15/01/2026"
+  },
+  "ai_response": "Recebi o comprovante! Pagamento de R$ 150,00 confirmado. Obrigado!",
+  "ai_response_sent": true
+}
+```
+</CodeGroup>
+
+---
+
+## Request - Grupo
+
+<CodeGroup>
+```json Request
+{
+  "organization_name": "MinhaEmpresa",
+  "phone_number": "5511888888888",
+  "contact_name": "Pedro",
+
+  "message_type": "TEXT",
+  "message_text": "@bot ajuda aqui",
+
+  "is_group": true,
+  "group_id": "120363123456789012@g.us",
+  "group_participant": "5511888888888@s.whatsapp.net",
+  "group_name": "Suporte Clientes",
+
+  "underlying_api": "UAZAPI",
+  "uazapi_base_url": "https://api.evolution.com",
+  "uazapi_token": "token-123"
+}
+```
+
+```json Response
+{
+  "success": true,
+  "is_group": true,
+  "group_id": "120363123456789012@g.us",
+  "message_saved": true,
+  "ai_response": "Oi Pedro! Como posso ajudar?",
+  "ai_response_sent": true
+}
+```
+</CodeGroup>
+
+---
+
+## Request - Reacao
+
+<CodeGroup>
+```json Request
+{
+  "organization_name": "MinhaEmpresa",
+  "phone_number": "5511888888888",
+
+  "message_type": "REACTION",
+  "message_text": "👍",
+  "message_content": {
+    "type": "REACTION",
+    "reaction": {
+      "emoji": "👍",
+      "target_message_id": "3EB0A123456789",
+      "is_removal": false
+    }
+  },
+
+  "is_reaction": true,
+  "reaction_emoji": "👍",
+  "reaction_target_id": "3EB0A123456789"
+}
+```
+
+```json Response
+{
+  "success": true,
+  "is_reaction": true,
+  "reaction_processed": true,
+  "message": "Reacao registrada"
+}
+```
+</CodeGroup>
+
+---
+
+## Request - Mensagem Citada (Reply)
+
+<CodeGroup>
+```json Request
+{
+  "organization_name": "MinhaEmpresa",
+  "phone_number": "5511888888888",
+  "contact_name": "Ana",
+
+  "message_type": "TEXT",
+  "message_text": "Sim, pode confirmar!",
+  "message_content": {
+    "type": "TEXT",
+    "text": "Sim, pode confirmar!",
+    "quoted": {
+      "quoted_message_id": "3EB0A123456789",
+      "quoted_text": "Deseja confirmar presenca no evento?",
+      "is_reply": true
+    }
+  },
+
+  "is_reply": true,
+  "quoted_message_id": "3EB0A123456789",
+  "quoted_text": "Deseja confirmar presenca no evento?"
+}
+```
+
+```json Response
+{
+  "success": true,
+  "message_saved": true,
+  "reply_context": {
+    "original_message": "Deseja confirmar presenca no evento?",
+    "reply_text": "Sim, pode confirmar!"
+  },
+  "ai_response": "Perfeito Ana! Sua presenca esta confirmada. Ate la!",
+  "ai_response_sent": true
+}
+```
+</CodeGroup>
+
+---
+
+## Response - Erros
+
+### Erro de Validacao
+
+```json
+{
+  "success": false,
+  "error": "phone_number is required",
+  "error_code": "VALIDATION_ERROR"
+}
+```
+
+### Erro de Organizacao
+
+```json
+{
+  "success": false,
+  "error": "Organization 'EmpresaInvalida' not found",
+  "error_code": "ORG_NOT_FOUND"
+}
+```
+
+### Erro de Transcricao
+
+```json
+{
+  "success": false,
+  "error": "Failed to transcribe audio: OpenAI API error",
+  "error_code": "TRANSCRIPTION_ERROR",
+  "partial_success": true,
+  "message_saved": true
+}
+```
+
+### Erro de Timeout
+
+```json
+{
+  "success": false,
+  "error": "Request timeout after 30000ms",
+  "error_code": "TIMEOUT"
+}
+```
+
+---
+
+## Tipos de Mensagem Suportados
+
+| message_type | Descricao |
+|--------------|-----------|
+| `TEXT` | Mensagem de texto simples |
+| `AUDIO` | Audio/voz (transcrito automaticamente) |
+| `IMAGE` | Imagem (analisada por IA se habilitado) |
+| `VIDEO` | Video (caption extraido) |
+| `DOCUMENT` | PDF, DOC, etc (texto extraido) |
+| `STICKER` | Figurinha |
+| `LOCATION` | Localizacao |
+| `CONTACT` | Cartao de contato |
+| `CONTACTS` | Multiplos contatos |
+| `REACTION` | Reacao com emoji |
+| `POLL` | Enquete criada |
+| `POLL_VOTE` | Voto em enquete |
+| `INTERACTIVE` | Resposta de botao/lista |
+| `TEMPLATE_REPLY` | Resposta de template |
+
+---
+
+## Codigos de Status
+
+| Codigo | Descricao |
+|--------|-----------|
+| `200` | Sucesso |
+| `400` | Erro de validacao |
+| `401` | Nao autorizado |
+| `404` | Organizacao nao encontrada |
+| `408` | Timeout |
+| `500` | Erro interno |
+
+---
+
+## Proximos Passos
+
+<CardGroup cols={2}>
+  <Card title="Agent Tools" icon="wrench" href="/api-reference/rpc/get-lead">
+    Funcoes RPC disponiveis
+  </Card>
+  <Card title="Edge Functions" icon="bolt" href="/api-reference/edge/process-message">
+    Documentacao completa da Edge Function
+  </Card>
+</CardGroup>

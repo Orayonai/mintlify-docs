@@ -1,0 +1,274 @@
+---
+title: 'META Cloud API'
+description: 'Como obter META_TOKEN e PhoneNumberId para WhatsApp Business'
+icon: 'meta'
+---
+
+## Visao Geral
+
+A **META Cloud API** e a API oficial do WhatsApp Business. Com ela voce pode:
+
+- Enviar e receber mensagens
+- Mostrar indicador "digitando..."
+- Enviar templates aprovados
+- Receber webhooks de status
+
+<Info>
+  **Requisitos:**
+  - Conta Meta Business verificada
+  - Numero de telefone dedicado para WhatsApp Business
+  - App criado no Meta for Developers
+</Info>
+
+---
+
+## Passo 1: Criar App no Meta for Developers
+
+1. Acesse [developers.facebook.com](https://developers.facebook.com)
+
+2. Clique em **My Apps** > **Create App**
+
+3. Selecione **Business** como tipo
+
+4. Preencha:
+   - **App name:** Nome do seu app
+   - **Contact email:** Seu email
+   - **Business Account:** Selecione sua conta
+
+5. Clique **Create App**
+
+---
+
+## Passo 2: Adicionar WhatsApp ao App
+
+1. No dashboard do app, clique em **Add Product**
+
+2. Encontre **WhatsApp** e clique **Set Up**
+
+3. Selecione sua **Meta Business Account**
+
+4. Voce sera redirecionado para a configuracao do WhatsApp
+
+---
+
+## Passo 3: Obter o Phone Number ID
+
+<Steps>
+  <Step title="Acessar WhatsApp Manager">
+    No menu lateral, va em **WhatsApp** > **API Setup**
+  </Step>
+
+  <Step title="Selecionar Numero">
+    Em **From**, selecione seu numero de telefone
+
+    <Frame>
+      <img src="/images/meta-phone-select.png" alt="Selecionar numero" />
+    </Frame>
+  </Step>
+
+  <Step title="Copiar Phone Number ID">
+    O **Phone number ID** aparece logo abaixo do numero selecionado
+
+    **Exemplo:** `903845722807525`
+
+    <Tip>
+      Clique no icone de copiar ao lado do ID
+    </Tip>
+  </Step>
+</Steps>
+
+### Onde usar
+
+```json
+{
+  "PhoneNumberIdOFICIAL": "903845722807525"
+}
+```
+
+<Warning>
+  O Phone Number ID e diferente do numero de telefone! E um ID interno da Meta.
+</Warning>
+
+---
+
+## Passo 4: Obter o Access Token (META_TOKEN)
+
+Existem 2 tipos de token:
+
+| Tipo | Duracao | Uso |
+|------|---------|-----|
+| **Temporary** | 24 horas | Apenas para testes |
+| **Permanent** | Nao expira | Producao |
+
+### Token Temporario (para testes)
+
+1. Em **WhatsApp** > **API Setup**
+2. Clique em **Generate** ao lado de "Temporary access token"
+3. Copie o token gerado
+
+<Warning>
+  Token temporario expira em 24 horas. Use apenas para testes!
+</Warning>
+
+### Token Permanente (para producao)
+
+<Steps>
+  <Step title="Criar System User">
+    1. Va em [business.facebook.com](https://business.facebook.com)
+    2. Clique em **Settings** (engrenagem)
+    3. Va em **Users** > **System Users**
+    4. Clique **Add**
+    5. Preencha:
+       - **Name:** `WhatsApp Bot`
+       - **Role:** `Admin`
+    6. Clique **Create System User**
+  </Step>
+
+  <Step title="Adicionar Assets">
+    1. Clique no System User criado
+    2. Clique **Add Assets**
+    3. Selecione **Apps**
+    4. Marque seu App do WhatsApp
+    5. Ative **Full Control**
+    6. Clique **Save Changes**
+  </Step>
+
+  <Step title="Gerar Token">
+    1. Clique no System User
+    2. Clique **Generate New Token**
+    3. Selecione o **App**
+    4. Selecione as permissoes:
+       - `whatsapp_business_management`
+       - `whatsapp_business_messaging`
+    5. Clique **Generate Token**
+    6. **COPIE O TOKEN** (so aparece uma vez!)
+  </Step>
+</Steps>
+
+### Onde usar
+
+```json
+{
+  "META_TOKEN": "EAFtabZAICSRkBQNjSS4h8kuNwGm..."
+}
+```
+
+---
+
+## Passo 5: Configurar Webhook
+
+Para receber mensagens, configure o webhook:
+
+1. Em **WhatsApp** > **Configuration**
+
+2. Em **Webhook**, clique **Edit**
+
+3. Configure:
+   - **Callback URL:** `https://seu-n8n.com/webhook/whatsapp`
+   - **Verify Token:** Uma string qualquer (ex: `meu_token_secreto`)
+
+4. Clique **Verify and Save**
+
+5. Em **Webhook fields**, ative:
+   - `messages`
+   - `message_status` (opcional)
+
+---
+
+## Para que serve o PhoneNumberId?
+
+O **Phone Number ID** e necessario para:
+
+### 1. Enviar Mensagens
+
+```bash
+POST https://graph.facebook.com/v18.0/{PhoneNumberId}/messages
+```
+
+### 2. Mostrar "Digitando..."
+
+```bash
+POST https://graph.facebook.com/v18.0/{PhoneNumberId}/messages
+{
+  "messaging_product": "whatsapp",
+  "recipient_type": "individual",
+  "to": "5511999999999",
+  "type": "reaction",
+  "reaction": {
+    "message_id": "wamid.xxx",
+    "emoji": ""
+  }
+}
+```
+
+<Tip>
+  O indicador "digitando..." e enviado automaticamente pelo sistema antes de processar a mensagem.
+</Tip>
+
+### 3. Marcar como Lido
+
+```bash
+POST https://graph.facebook.com/v18.0/{PhoneNumberId}/messages
+{
+  "messaging_product": "whatsapp",
+  "status": "read",
+  "message_id": "wamid.xxx"
+}
+```
+
+---
+
+## Exemplo de Request
+
+Apos configurar, o N8N envia para a Edge Function:
+
+```json
+{
+  "organization_name": "MinhaEmpresa",
+  "business_phone": "5511999999999",
+  "phone_number": "5511888888888",
+  "message_type": "TEXT",
+  "message_text": "Ola, preciso de ajuda",
+
+  "underlying_api": "META",
+  "autorizacao_oficial": "EAFtabZAICSRk...",
+  "phone_number_id_OFICIAL": "903845722807525"
+}
+```
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Token expirou">
+    Se estiver usando token temporario, gere um novo ou configure o token permanente.
+  </Accordion>
+
+  <Accordion title="Webhook nao recebe mensagens">
+    1. Verifique se o webhook esta verificado
+    2. Confirme que `messages` esta ativo nos Webhook fields
+    3. Teste com a ferramenta de teste do Meta
+  </Accordion>
+
+  <Accordion title="Erro 'Phone number not registered'">
+    O numero precisa estar registrado no WhatsApp Business. Va em **Phone Numbers** e verifique o status.
+  </Accordion>
+
+  <Accordion title="Erro de permissao">
+    Verifique se o System User tem as permissoes corretas e acesso ao App.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Proximos Passos
+
+<CardGroup cols={2}>
+  <Card title="Voltar ao Quickstart" icon="arrow-left" href="/guides/n8n-agent/quickstart">
+    Continuar configuracao
+  </Card>
+  <Card title="Ver Responses" icon="code" href="/guides/n8n-agent/responses">
+    Exemplos de request/response
+  </Card>
+</CardGroup>
