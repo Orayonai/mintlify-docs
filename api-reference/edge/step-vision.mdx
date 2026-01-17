@@ -1,0 +1,138 @@
+---
+title: 'Step 7: Vision'
+description: 'Analisa imagens e PDFs usando GPT-4 Vision'
+icon: 'eye'
+---
+
+## Funcao
+
+`processImage` / `processPDF` - Analisa imagens e documentos usando GPT-4 Vision.
+
+---
+
+## Quando Executa
+
+| Tipo | Condicao |
+|------|----------|
+| IMAGE | `message_type === 'IMAGE'` |
+| VIDEO | `message_type === 'VIDEO'` (analisa frames) |
+| DOCUMENT | `message_type === 'DOCUMENT'` e mimetype PDF |
+
+---
+
+## Input Esperado
+
+```typescript
+{
+  media_url: string           // URL da midia
+  media_base64?: string       // Base64 (alternativa)
+  media_mimetype: string
+  openai_api_key: string
+  image_prompt?: string       // Prompt customizado
+  vision_model?: string       // Modelo (default: gpt-4o-mini)
+}
+```
+
+---
+
+## Output Retornado
+
+```typescript
+interface MediaProcessingResult {
+  type: 'image' | 'pdf' | 'video'
+  text?: string              // Texto extraido (OCR)
+  description?: string       // Descricao da imagem
+  method: 'vision' | 'extract'
+  model_used: string
+  pages?: number             // Para PDFs
+  success: boolean
+  error?: string
+}
+```
+
+---
+
+## Exemplo: Imagem
+
+### Input
+
+```json
+{
+  "media_url": "https://mmg.whatsapp.net/...",
+  "media_mimetype": "image/jpeg",
+  "image_prompt": "Analise esta imagem. Extraia todo texto visivel."
+}
+```
+
+### Output
+
+```json
+{
+  "type": "image",
+  "text": "COMPROVANTE DE PAGAMENTO\nValor: R$ 150,00\nData: 15/01/2026",
+  "description": "Imagem de um comprovante bancario",
+  "method": "vision",
+  "model_used": "gpt-4o-mini",
+  "success": true
+}
+```
+
+---
+
+## Exemplo: PDF
+
+### Input
+
+```json
+{
+  "media_url": "https://example.com/documento.pdf",
+  "media_mimetype": "application/pdf",
+  "pdf_prompt": "Extraia todo o conteudo deste documento."
+}
+```
+
+### Output
+
+```json
+{
+  "type": "pdf",
+  "text": "Contrato de Prestacao de Servicos...",
+  "method": "vision",
+  "model_used": "gpt-4o-mini",
+  "pages": 3,
+  "success": true
+}
+```
+
+---
+
+## Prompts Padrao
+
+```typescript
+// Imagem
+const imagePrompt = "Analise esta imagem. Se houver texto, extraia todo o texto visivel. Se for uma foto ou ilustracao, descreva o conteudo de forma objetiva em portugues."
+
+// PDF
+const pdfPrompt = "Extraia todo o conteudo deste documento PDF."
+```
+
+---
+
+## Modelos Disponiveis
+
+| Modelo | Velocidade | Custo | Uso |
+|--------|-----------|-------|-----|
+| `gpt-4o-mini` | Rapido | Baixo | Padrao |
+| `gpt-4o` | Medio | Alto | Alta precisao |
+| `gpt-4-turbo` | Lento | Alto | Imagens complexas |
+
+---
+
+## Custo Estimado
+
+| Tipo | Custo Aproximado |
+|------|------------------|
+| Imagem pequena | ~$0.01 |
+| Imagem grande | ~$0.03 |
+| PDF 1 pagina | ~$0.02 |
+| PDF 10 paginas | ~$0.15 |

@@ -1,0 +1,232 @@
+---
+title: 'Step 3: Session'
+description: 'Gerencia a sessao de conversa e detecta comandos'
+icon: 'comments'
+---
+
+## Funcao
+
+`upsertSession` - Gerencia a sessao de conversa. Detecta comandos, controla status e calcula janela 24h do WhatsApp.
+
+---
+
+## Input Esperado
+
+```typescript
+{
+  direction: 'IN' | 'OUT'           // Direcao da mensagem
+  author: 'CUSTOMER' | 'HUMAN' | 'AI' | 'AGENT'
+  message_text: string              // Texto (para detectar comandos)
+  chatwoot_account_id?: number      // IDs do Chatwoot (opcional)
+  chatwoot_inbox_id?: number
+  chatwoot_conversation_id?: number
+}
+```
+
+---
+
+## Output Retornado
+
+```typescript
+{
+  session: Session
+  isNew: boolean
+  comandoDetectado: string | null
+  pauseHours: number | null
+}
+```
+
+### Interface Session
+
+```typescript
+interface Session {
+  id: string
+  contact_id: string
+  organization_id: string
+  integration_token: string
+  owner_phone: string
+  status: 'OPEN' | 'PAUSED' | 'CLOSED'
+  started_by: string
+  status_reason: string | null
+  end_reason: string | null
+  expires_at: string
+  last_activity: string
+  chatwoot_account_id: number | null
+  chatwoot_inbox_id: number | null
+  chatwoot_conversation_id: number | null
+  last_customer_message_at: string | null
+  whatsapp_window_expires_at: string | null
+  whatsapp_can_reply: boolean
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+```
+
+---
+
+## Status da Sessao
+
+| Status | Descricao | Quando |
+|--------|-----------|--------|
+| `OPEN` | Ativa, processando | Conversa em andamento |
+| `PAUSED` | Pausada, aguardando | Humano assumiu ou `@pausar` |
+| `CLOSED` | Encerrada | `@fechar`, expirou, ou blacklist |
+
+---
+
+## Comandos Detectados
+
+```typescript
+const COMANDO_PATTERNS = {
+  FECHAR: /@fechar\b/i,
+  PAUSAR: /@pausar(?:\s+(\d+))?/i,
+  REABRIR: /@reabrir\b/i,
+  BLACKLIST: /@blacklist\b/i,
+  WHITELIST: /@whitelist\b/i
+}
+```
+
+### Exemplos
+
+| Mensagem | Comando | Acao |
+|----------|---------|------|
+| `@fechar` | `@fechar` | Fecha sessao |
+| `@pausar` | `@pausar` | Pausa indefinidamente |
+| `@pausar 24` | `@pausar 24` | Pausa por 24 horas |
+| `@reabrir` | `@reabrir` | Reabre sessao pausada |
+| `@blacklist` | `@blacklist` | Bloqueia contato + fecha |
+| `@whitelist` | `@whitelist` | Desbloqueia contato |
+
+---
+
+## Auto-Pause
+
+Quando um **humano** ou **agente** responde (nao a IA), a sessao e pausada automaticamente:
+
+```typescript
+if (!comando && input.direction === 'OUT' &&
+    ['HUMAN', 'AGENT'].includes(input.author)) {
+  comando = 'auto_pause_human'
+  sessionStatus = 'PAUSED'
+  sessionStatusReason = 'AUTO_PAUSED_HUMAN'
+  pauseHours = organization.session_timeout_hours
+}
+```
+
+<Info>
+  Isso garante que quando um atendente humano assume, a IA para de responder automaticamente.
+</Info>
+
+---
+
+## Janela 24h do WhatsApp
+
+O WhatsApp Business API so permite respostas dentro de **24 horas** apos a ultima mensagem do cliente.
+
+```typescript
+// Quando cliente envia mensagem
+if (isCustomerMessage) {
+  lastCustomerMessageAt = currentTime
+  whatsappWindowExpiresAt = calculateExpiresAt(24) // +24h
+  whatsappCanReply = true
+}
+```
+
+### Campos
+
+| Campo | Descricao |
+|-------|-----------|
+| `last_customer_message_at` | Ultima mensagem do cliente |
+| `whatsapp_window_expires_at` | Quando janela expira |
+| `whatsapp_can_reply` | Se pode responder agora |
+
+---
+
+## Logica de Busca/Criacao
+
+```typescript
+// 1. Buscar sessao OPEN ou PAUSED
+const { data: existingSession } = await supabase
+  .from('sessions')
+  .select('*')
+  .eq('contact_id', contact.id)
+  .in('status', ['OPEN', 'PAUSED'])
+  .is('deleted_at', null)
+  .order('created_at', { ascending: false })
+  .limit(1)
+  .maybeSingle()
+
+// 2. Se existe, atualizar
+if (existingSession) {
+  // Atualiza last_activity, aplica comandos, etc
+  return { session: updatedSession, isNew: false }
+}
+
+// 3. Se nao existe, criar nova
+const { data: newSession } = await supabase
+  .from('sessions')
+  .insert({
+    contact_id: contact.id,
+    organization_id: organization.id,
+    status: 'OPEN',
+    started_by: 'CUSTOMER',
+    // ...
+  })
+  .select()
+  .single()
+
+return { session: newSession, isNew: true }
+```
+
+---
+
+## Limpeza de Memoria (Sessao CLOSED)
+
+Quando a sessao fecha, a memoria do agente no Redis e limpa:
+
+```typescript
+if (session.status === 'CLOSED') {
+  await clearAgentMemory(redis, session.id)
+  // Remove: memory:agent:{session_id}
+}
+```
+
+Isso evita que conversas antigas contaminem novas sessoes.
+
+---
+
+## Tabela no Supabase
+
+```sql
+CREATE TABLE whatsapp.sessions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  contact_id UUID REFERENCES whatsapp.contacts(id),
+  organization_id UUID REFERENCES whatsapp.organizations(id),
+  integration_token TEXT,
+  owner_phone TEXT,
+  status TEXT DEFAULT 'OPEN',
+  started_by TEXT DEFAULT 'CUSTOMER',
+  status_reason TEXT,
+  end_reason TEXT,
+  expires_at TIMESTAMPTZ,
+  last_activity TIMESTAMPTZ DEFAULT NOW(),
+  chatwoot_account_id INTEGER,
+  chatwoot_inbox_id INTEGER,
+  chatwoot_conversation_id INTEGER,
+  last_customer_message_at TIMESTAMPTZ,
+  whatsapp_window_expires_at TIMESTAMPTZ,
+  whatsapp_can_reply BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  deleted_at TIMESTAMPTZ
+);
+```
+
+---
+
+## Proximo Step
+
+<Card title="Step 4: Message" icon="message" href="/api-reference/edge/step-message">
+  Insere a mensagem no banco
+</Card>

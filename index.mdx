@@ -1,97 +1,63 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: 'Documentacao Orayon'
+description: 'Documentacao tecnica da plataforma Orayon AI'
+icon: 'house'
 ---
 
-## Setting up
+## Bem-vindo
 
-Get your documentation site up and running in minutes.
+Esta e a documentacao tecnica da **Orayon AI** - plataforma de automacao de atendimento via WhatsApp com inteligencia artificial.
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+---
 
-## Make it yours
+## Comece Aqui
 
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Configurar Agente N8N" icon="rocket" href="/guides/n8n-agent/quickstart">
+    Guia passo a passo para configurar o agente de WhatsApp no N8N
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="API Reference" icon="code" href="/api-reference/introduction">
+    Documentacao completa das APIs, Edge Functions e RPCs
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+---
 
-Everything you need to create world-class documentation.
+## Arquitetura
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  WhatsApp   │────▶│    N8N      │────▶│  Supabase   │
+│  (Webhook)  │     │  Workflow   │     │  Edge Fn    │
+└─────────────┘     └─────────────┘     └─────────────┘
+                          │                    │
+                          ▼                    ▼
+                    ┌─────────────┐     ┌─────────────┐
+                    │   Redis     │     │   OpenAI    │
+                    │   Buffer    │     │   Whisper   │
+                    └─────────────┘     └─────────────┘
+```
 
-## Need inspiration?
+---
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+## Principais Componentes
+
+<CardGroup cols={3}>
+  <Card title="Edge Function" icon="bolt" href="/api-reference/edge/arquitetura">
+    Processa mensagens WhatsApp
+  </Card>
+  <Card title="Agent Tools" icon="wrench" href="/api-reference/rpc/get-lead">
+    Funcoes RPC para o agente IA
+  </Card>
+  <Card title="Crons" icon="clock" href="/api-reference/crons/overview">
+    Jobs agendados (pg_cron)
+  </Card>
+</CardGroup>
+
+---
+
+## Links Uteis
+
+- [Site Orayon](https://orayon.ai)
+- [GitHub](https://github.com/orayonai)
+- [Suporte](mailto:contato@orayon.com.br)

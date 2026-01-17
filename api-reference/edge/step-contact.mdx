@@ -1,0 +1,172 @@
+---
+title: 'Step 2: Contact'
+description: 'Busca ou cria o contato (cliente) no sistema'
+icon: 'user'
+---
+
+## Funcao
+
+`upsertContact` - Busca o contato pelo telefone. Se nao existir, cria automaticamente.
+
+---
+
+## Input Esperado
+
+```typescript
+{
+  phone_number: string    // Telefone do cliente (ex: "5511999999999")
+  contact_name: string    // Nome do cliente (ex: "Joao Silva")
+  external_id: string     // ID externo (JID do WhatsApp)
+}
+```
+
+### Exemplo Real
+
+```json
+{
+  "phone_number": "5511999999999",
+  "contact_name": "Maria Santos",
+  "external_id": "5511999999999@s.whatsapp.net"
+}
+```
+
+---
+
+## Output Retornado
+
+```typescript
+interface Contact {
+  id: string              // UUID do contato
+  phone_number: string    // Telefone normalizado
+  name: string            // Nome
+  external_id: string     // JID do WhatsApp
+  organization_id: string // UUID da organizacao
+  source: string          // Origem (whatsapp)
+  bypass_bots: boolean    // Se esta na blacklist
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+// Retorno inclui flag
+{ contact: Contact, isNew: boolean }
+```
+
+### Exemplo Real
+
+```json
+{
+  "contact": {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "phone_number": "5511999999999",
+    "name": "Maria Santos",
+    "external_id": "5511999999999@s.whatsapp.net",
+    "organization_id": "550e8400-e29b-41d4-a716-446655440000",
+    "source": "whatsapp",
+    "bypass_bots": false,
+    "created_at": "2026-01-15T10:00:00.000Z",
+    "updated_at": "2026-01-15T10:00:00.000Z",
+    "deleted_at": null
+  },
+  "isNew": false
+}
+```
+
+---
+
+## Logica de Busca
+
+```typescript
+// 1. Buscar por telefone + organizacao
+const { data: contact } = await supabase
+  .from('contacts')
+  .select('*')
+  .eq('phone_number', phoneNumber)
+  .eq('organization_id', organization.id)
+  .is('deleted_at', null)
+  .maybeSingle()
+
+// 2. Se existe, retornar
+if (contact) {
+  return { contact, isNew: false }
+}
+
+// 3. Se nao existe, criar
+const { data: newContact } = await supabase
+  .from('contacts')
+  .insert({
+    phone_number: phoneNumber,
+    name: input.contact_name || 'Cliente',
+    external_id: input.external_id || phoneNumber,
+    organization_id: organization.id,
+    source: 'whatsapp',
+    bypass_bots: false
+  })
+  .select()
+  .single()
+
+return { contact: newContact, isNew: true }
+```
+
+---
+
+## Campo bypass_bots
+
+Este campo e importante para **campanhas de marketing**:
+
+| Valor | Significado |
+|-------|-------------|
+| `false` | Contato recebe mensagens normalmente |
+| `true` | Contato esta na **blacklist** - nao recebe campanhas |
+
+### Como funciona
+
+Quando usuario recebe uma campanha de marketing e clica no botao **"Nao quero mais receber"**:
+
+1. Webhook N8N recebe a interacao
+2. Chama RPC `block_contact` ou comando `@blacklist`
+3. `bypass_bots` e setado para `true`
+4. Futuras campanhas ignoram este contato
+
+<Warning>
+  O campo `bypass_bots` nao impede mensagens individuais do atendimento. Ele apenas bloqueia disparos em massa (campanhas).
+</Warning>
+
+---
+
+## Tabela no Supabase
+
+```sql
+CREATE TABLE whatsapp.contacts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  phone_number TEXT NOT NULL,
+  name TEXT DEFAULT 'Cliente',
+  external_id TEXT,
+  organization_id UUID REFERENCES whatsapp.organizations(id),
+  source TEXT DEFAULT 'whatsapp',
+  bypass_bots BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  deleted_at TIMESTAMPTZ,
+
+  UNIQUE(phone_number, organization_id)
+);
+```
+
+---
+
+## Erros Possiveis
+
+| Erro | Causa | Solucao |
+|------|-------|---------|
+| `Erro ao buscar contact` | Problema no Supabase | Verificar conexao |
+| `Erro ao criar contact` | Telefone invalido | Verificar formato |
+| `UNIQUE violation` | Duplicata | Contato ja existe |
+
+---
+
+## Proximo Step
+
+<Card title="Step 3: Session" icon="comments" href="/api-reference/edge/step-session">
+  Gerencia a sessao de conversa
+</Card>

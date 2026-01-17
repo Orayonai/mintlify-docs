@@ -1,0 +1,118 @@
+---
+title: 'Step 6: Whisper'
+description: 'Transcreve audio para texto usando OpenAI Whisper'
+icon: 'microphone'
+---
+
+## Funcao
+
+`transcribeAudio` - Transcreve audio/voz para texto usando a API Whisper da OpenAI.
+
+---
+
+## Quando Executa
+
+Apenas quando `message_type === 'AUDIO'` e `openai_api_key` esta configurado.
+
+---
+
+## Input Esperado
+
+```typescript
+{
+  media_url: string        // URL do audio
+  media_mimetype: string   // audio/ogg, audio/mpeg, etc
+  openai_api_key: string   // API Key da OpenAI
+}
+```
+
+---
+
+## Output Retornado
+
+```typescript
+{
+  transcription: string    // Texto transcrito
+}
+```
+
+---
+
+## Formatos Suportados
+
+| Formato | Mimetype | Suportado |
+|---------|----------|-----------|
+| OGG/Opus | audio/ogg | Sim |
+| MP3 | audio/mpeg | Sim |
+| WAV | audio/wav | Sim |
+| M4A | audio/mp4 | Sim |
+| WebM | audio/webm | Sim |
+
+---
+
+## Exemplo Real
+
+### Input
+
+```json
+{
+  "media_url": "https://mmg.whatsapp.net/o1/v/t62...",
+  "media_mimetype": "audio/ogg; codecs=opus"
+}
+```
+
+### Output
+
+```json
+{
+  "transcription": "Ola, gostaria de saber sobre o evento de amanha"
+}
+```
+
+---
+
+## Fluxo de Processamento
+
+```
+1. Baixar audio da URL
+2. Detectar extensao pelo mimetype
+3. Criar FormData com arquivo
+4. Enviar para OpenAI Whisper API
+5. Retornar texto transcrito
+6. Atualizar mensagem no banco com transcricao
+```
+
+---
+
+## API Call
+
+```typescript
+const formData = new FormData()
+formData.append('file', audioBlob, `audio.${extension}`)
+formData.append('model', 'whisper-1')
+formData.append('language', 'pt')
+formData.append('response_format', 'text')
+
+const response = await fetch(
+  'https://api.openai.com/v1/audio/transcriptions',
+  {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openaiApiKey}`
+    },
+    body: formData
+  }
+)
+```
+
+---
+
+## Custo
+
+| Modelo | Preco |
+|--------|-------|
+| whisper-1 | $0.006 / minuto |
+
+<Info>
+  Um audio de 30 segundos custa aproximadamente $0.003 (menos de R$0.02).
+</Info>

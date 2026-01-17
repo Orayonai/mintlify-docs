@@ -1,0 +1,53 @@
+---
+title: 'Step 4: Message'
+description: 'Insere a mensagem no banco de dados'
+icon: 'message'
+---
+
+## Funcao
+
+`insertMessage` - Insere a mensagem recebida na tabela `messages`.
+
+---
+
+## Input Esperado
+
+```typescript
+{
+  message_type: string    // TEXT, AUDIO, IMAGE, VIDEO, etc
+  message_text: string    // Conteudo textual
+  message_content: any    // Objeto completo da mensagem
+  direction: 'IN' | 'OUT'
+  author: 'CUSTOMER' | 'HUMAN' | 'AI' | 'AGENT'
+  message_id: string      // ID original do WhatsApp
+  media_url?: string
+  media_mimetype?: string
+}
+```
+
+---
+
+## Output Retornado
+
+```typescript
+interface Message {
+  id: string
+  session_id: string
+  contact_id: string
+  content: any
+  type: string
+  direction: 'IN' | 'OUT'
+  author: string
+  status: string
+  media_url: string | null
+  created_at: string
+}
+```
+
+---
+
+## Proximo Step
+
+<Card title="Step 5: Buffer" icon="layer-group" href="/api-reference/edge/step-buffer">
+  Agrupa mensagens consecutivas
+</Card>

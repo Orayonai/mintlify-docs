@@ -1,0 +1,115 @@
+---
+title: 'Step 5: Buffer'
+description: 'Agrupa mensagens consecutivas do mesmo usuario'
+icon: 'layer-group'
+---
+
+## Funcao
+
+`processBuffer` - Agrupa mensagens enviadas em sequencia pelo mesmo usuario antes de processar.
+
+---
+
+## Por que usar Buffer?
+
+Usuarios frequentemente enviam **varias mensagens seguidas**:
+
+```
+Usuario: Oi
+Usuario: Preciso de ajuda
+Usuario: Meu pedido nao chegou
+```
+
+Sem buffer, a IA responderia **3 vezes**. Com buffer, agrupa tudo em uma unica requisicao.
+
+---
+
+## Como Funciona
+
+```
+Msg 1 ──▶ Redis (push) ──▶ Aguarda 7s
+Msg 2 ──▶ Redis (push) ──▶ Aguarda 7s
+Msg 3 ──▶ Redis (push) ──▶ Aguarda 7s
+                              │
+                              ▼
+                    Timeout expirou
+                              │
+                              ▼
+                    Concatena todas
+                              │
+                              ▼
+                    Processa 1x só
+```
+
+---
+
+## Input Esperado
+
+```typescript
+{
+  sessionId: string           // ID da sessao
+  messageText: string         // Texto da mensagem
+  messageId: string           // ID unico da mensagem
+  bufferTimeoutSeconds: number // Tempo de espera (default: 7)
+}
+```
+
+---
+
+## Output Retornado
+
+```typescript
+interface BufferResult {
+  mensagemFinal: string      // Texto concatenado e limpo
+  mensagemOriginal: string   // Texto original
+  totalMensagens: number     // Quantas foram agrupadas
+  shouldProcess: boolean     // Se deve processar agora
+  reason?: string            // Motivo se nao processar
+}
+```
+
+---
+
+## Exemplo Real
+
+### Entrada (3 mensagens em 5 segundos)
+
+```
+Msg 1: "Oi"
+Msg 2: "Preciso de ajuda"
+Msg 3: "Meu pedido 12345 nao chegou"
+```
+
+### Saida
+
+```json
+{
+  "mensagemFinal": "Oi Preciso de ajuda Meu pedido 12345 nao chegou",
+  "mensagemOriginal": "Oi\nPreciso de ajuda\nMeu pedido 12345 nao chegou",
+  "totalMensagens": 3,
+  "shouldProcess": true
+}
+```
+
+---
+
+## Redis Keys
+
+| Key | Descricao | TTL |
+|-----|-----------|-----|
+| `buffer:{session_id}` | Lista de mensagens pendentes | 5 min |
+| `memory:agent:{session_id}` | Memoria do agente (LangChain) | Permanente |
+
+---
+
+## Configuracao
+
+```json
+{
+  "buffer_timeout_seconds": 7
+}
+```
+
+<Tip>
+  7 segundos e o padrao recomendado. Aumentar pode causar demora na resposta.
+</Tip>

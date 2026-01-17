@@ -1,0 +1,203 @@
+---
+title: 'Arquitetura'
+description: 'Visao geral da arquitetura da Edge Function process-message'
+icon: 'sitemap'
+---
+
+## Visao Geral
+
+A Edge Function `process-message` e o coracao do sistema de processamento de mensagens WhatsApp. Ela funciona como um **orquestrador de micro-servicos**, executando cada etapa em sequencia.
+
+---
+
+## Fluxo de Processamento
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    EDGE FUNCTION: process-message                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐     │
+│  │ STEP 1   │──▶│ STEP 2   │──▶│ STEP 3   │──▶│ STEP 4   │     │
+│  │ Org      │   │ Contact  │   │ Session  │   │ Message  │     │
+│  └──────────┘   └──────────┘   └──────────┘   └──────────┘     │
+│       │              │              │              │             │
+│       ▼              ▼              ▼              ▼             │
+│  ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐     │
+│  │ STEP 5   │──▶│ STEP 6   │──▶│ STEP 7   │──▶│ STEP 8   │     │
+│  │ Buffer   │   │ Whisper  │   │ Vision   │   │ History  │     │
+│  └──────────┘   └──────────┘   └──────────┘   └──────────┘     │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Steps (Micro-Servicos)
+
+| Step | Nome | Funcao | Obrigatorio |
+|------|------|--------|-------------|
+| 1 | [Organization](/api-reference/edge/step-organization) | Busca/cria organizacao | Sim |
+| 2 | [Contact](/api-reference/edge/step-contact) | Busca/cria contato | Sim |
+| 3 | [Session](/api-reference/edge/step-session) | Gerencia sessao + comandos | Sim |
+| 4 | [Message](/api-reference/edge/step-message) | Insere mensagem no banco | Sim |
+| 5 | [Buffer](/api-reference/edge/step-buffer) | Agrupa mensagens consecutivas | Condicional |
+| 6 | [Whisper](/api-reference/edge/step-whisper) | Transcreve audio | Condicional |
+| 7 | [Vision](/api-reference/edge/step-vision) | Analisa imagens/PDFs | Condicional |
+| 8 | History | Busca historico anterior | Opcional |
+
+---
+
+## Quando cada Step executa
+
+```typescript
+// SEMPRE executam
+Step 1: Organization  // Busca config da empresa
+Step 2: Contact       // Busca/cria contato
+Step 3: Session       // Gerencia sessao
+Step 4: Message       // Salva mensagem
+
+// CONDICIONAIS - dependem do tipo de mensagem
+Step 5: Buffer        // Se direction === 'IN' (mensagem do cliente)
+Step 6: Whisper       // Se message_type === 'AUDIO'
+Step 7: Vision        // Se message_type === 'IMAGE' ou 'VIDEO' ou 'DOCUMENT'
+
+// OPCIONAL - precisa solicitar
+Step 8: History       // Se include_history === true
+```
+
+---
+
+## Dependencias entre Steps
+
+```
+Organization ─────────────────────────────────────┐
+     │                                            │
+     ▼                                            │
+Contact ──────────────────────────────────────────┤
+     │                                            │
+     ▼                                            │
+Session ────────────┬─────────────────────────────┤
+     │              │                             │
+     │              ▼                             │
+     │         [Se CLOSED]                        │
+     │              │                             │
+     │              ▼                             │
+     │         Clear Memory                       │
+     │              │                             │
+     ▼              ▼                             │
+Message ◀───────────┘                             │
+     │                                            │
+     ▼                                            │
+Buffer Redis ─────────────────────────────────────┤
+     │                                            │
+     ├───────────┬────────────┐                   │
+     ▼           ▼            ▼                   │
+Whisper      Vision       History                 │
+     │           │            │                   │
+     └───────────┴────────────┴───────────────────┤
+                                                  │
+                    ▼                             │
+              OUTPUT FINAL ◀──────────────────────┘
+```
+
+---
+
+## Tipos de Mensagem Suportados
+
+| Tipo | Processamento | Resultado |
+|------|---------------|-----------|
+| `TEXT` | Buffer | Texto concatenado |
+| `AUDIO` | Whisper | Transcricao |
+| `IMAGE` | Vision | OCR + Descricao |
+| `VIDEO` | Vision | Analise de frames |
+| `DOCUMENT` | Vision (PDF) | Texto extraido |
+| `STICKER` | Nenhum | Tipo registrado |
+| `LOCATION` | Nenhum | Coordenadas |
+| `CONTACT` | Nenhum | vCard |
+| `REACTION` | Nenhum | Emoji registrado |
+
+---
+
+## Comandos do Sistema
+
+Comandos detectados na mensagem que alteram comportamento:
+
+| Comando | Acao | Status Session |
+|---------|------|----------------|
+| `@fechar` | Fecha sessao | `CLOSED` |
+| `@pausar` | Pausa sessao | `PAUSED` |
+| `@pausar 24` | Pausa por 24h | `PAUSED` |
+| `@reabrir` | Reabre sessao | `OPEN` |
+| `@blacklist` | Bloqueia contato | `CLOSED` + bypass_bots |
+| `@whitelist` | Desbloqueia | `OPEN` + !bypass_bots |
+
+---
+
+## Response Final
+
+```typescript
+interface ProcessMessageOutput {
+  // IDs principais
+  organization_id: string
+  contact_id: string
+  session_id: string
+  message_id: string
+
+  // Dados processados
+  mensagem_final: string      // Texto limpo para IA
+  mensagem_original: string   // Texto original
+  total_mensagens: number     // Quantas foram concatenadas
+  transcricao?: string        // Se foi audio
+
+  // Flags de controle
+  continue_to_ai: boolean     // Se deve enviar para IA
+  continuar: 'true' | 'false' // String para N8N
+  comando_detectado: string | null
+  tem_comando: boolean
+
+  // Janela WhatsApp
+  whatsapp_can_reply: boolean
+  whatsapp_window_expires_at: string | null
+
+  // Objetos completos
+  organization: Organization
+  contact: Contact
+  session: Session
+  message: Message
+
+  // Flags detalhadas
+  flags: {
+    is_new_session: boolean
+    is_new_contact: boolean
+    is_customer_message: boolean
+    bypass_bots_enabled: boolean
+    whatsapp_window_active: boolean
+    media_processed: boolean
+    buffer_concatenated: boolean
+    memory_cleared: boolean
+  }
+
+  // Metricas
+  processing: {
+    duration_ms: number
+    steps_completed: string[]
+    redis_used: boolean
+    whisper_used: boolean
+    vision_used: boolean
+  }
+}
+```
+
+---
+
+## Proximos Passos
+
+<CardGroup cols={2}>
+  <Card title="Step 1: Organization" icon="building" href="/api-reference/edge/step-organization">
+    Busca/cria organizacao
+  </Card>
+  <Card title="Step 2: Contact" icon="user" href="/api-reference/edge/step-contact">
+    Busca/cria contato
+  </Card>
+</CardGroup>

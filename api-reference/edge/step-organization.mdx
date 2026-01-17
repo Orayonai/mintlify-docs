@@ -1,0 +1,176 @@
+---
+title: 'Step 1: Organization'
+description: 'Busca ou cria a organizacao (empresa) no sistema'
+icon: 'building'
+---
+
+## Funcao
+
+`upsertOrganization` - Busca a organizacao pelo nome e telefone. Se nao existir, cria automaticamente.
+
+---
+
+## Input Esperado
+
+```typescript
+{
+  organization_name: string   // Nome da empresa (ex: "MinhaEmpresa")
+  business_phone: string      // Telefone do WhatsApp Business
+  integration_token?: string  // Token de integracao (opcional)
+  session_timeout?: number    // Timeout de sessao em horas (opcional)
+}
+```
+
+### Exemplo Real
+
+```json
+{
+  "organization_name": "OrayonAI",
+  "business_phone": "5561999999999",
+  "integration_token": "",
+  "session_timeout": 24
+}
+```
+
+---
+
+## Output Retornado
+
+```typescript
+interface Organization {
+  id: string                    // UUID da organizacao
+  name: string                  // Nome
+  whatsapp_business_phone: string
+  integration_token: string
+  session_timeout_hours: number
+  config: OrganizationConfig    // Configuracoes (Redis, OpenAI, etc)
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+```
+
+### Exemplo Real
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "OrayonAI",
+  "whatsapp_business_phone": "5561999999999",
+  "integration_token": "org_1705327200000",
+  "session_timeout_hours": 24,
+  "config": {
+    "redis_url": "https://xxx.upstash.io",
+    "redis_token": "AXxx...",
+    "openai_api_key": "sk-proj-...",
+    "buffer_timeout_seconds": 7
+  },
+  "created_at": "2026-01-15T10:00:00.000Z",
+  "updated_at": "2026-01-15T10:00:00.000Z",
+  "deleted_at": null
+}
+```
+
+---
+
+## Logica de Busca
+
+1. **Primeiro:** Busca por `name` + `whatsapp_business_phone`
+2. **Fallback:** Se nao encontrar, busca so por `name`
+3. **Criar:** Se nenhum encontrado, cria nova organizacao
+
+```typescript
+// 1. Buscar por nome + telefone
+let { data: org } = await supabase
+  .from('organizations')
+  .select('*')
+  .eq('name', input.organization_name)
+  .eq('whatsapp_business_phone', businessPhone)
+  .is('deleted_at', null)
+  .maybeSingle()
+
+// 2. Fallback: buscar so por nome
+if (!org) {
+  const { data: orgByName } = await supabase
+    .from('organizations')
+    .select('*')
+    .eq('name', input.organization_name)
+    .is('deleted_at', null)
+    .maybeSingle()
+  org = orgByName
+}
+
+// 3. Se nao existe, criar
+if (!org) {
+  const { data: newOrg } = await supabase
+    .from('organizations')
+    .insert({...})
+    .select()
+    .single()
+  org = newOrg
+}
+```
+
+---
+
+## Config da Organizacao
+
+A `config` armazena credenciais especificas da organizacao:
+
+```typescript
+interface OrganizationConfig {
+  // Redis
+  redis_url?: string       // URL do Upstash ou Redis tradicional
+  redis_token?: string     // Token/password
+
+  // OpenAI
+  openai_api_key?: string
+  whisper_enabled?: boolean
+  whisper_model?: string
+
+  // Buffer
+  buffer_timeout_seconds?: number
+
+  // Session
+  session_timeout_hours?: number
+}
+```
+
+<Tip>
+  Se a organizacao nao tiver `config`, o sistema usa as variaveis de ambiente do Supabase como fallback.
+</Tip>
+
+---
+
+## Tabela no Supabase
+
+```sql
+CREATE TABLE whatsapp.organizations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  whatsapp_business_phone TEXT NOT NULL,
+  integration_token TEXT,
+  session_timeout_hours INTEGER DEFAULT 24,
+  config JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  deleted_at TIMESTAMPTZ
+);
+```
+
+---
+
+## Erros Possiveis
+
+| Erro | Causa | Solucao |
+|------|-------|---------|
+| `Erro ao buscar organization` | Problema no Supabase | Verificar conexao |
+| `Erro ao criar organization` | Dados invalidos | Verificar nome/telefone |
+
+---
+
+## Proximo Step
+
+<Card title="Step 2: Contact" icon="user" href="/api-reference/edge/step-contact">
+  Busca ou cria o contato do cliente
+</Card>

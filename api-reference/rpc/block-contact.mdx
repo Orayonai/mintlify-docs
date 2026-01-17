@@ -1,0 +1,198 @@
+---
+title: 'block_contact'
+description: 'Bloqueia contato para nao receber campanhas de marketing'
+icon: 'ban'
+---
+
+## Visao Geral
+
+Funcao RPC para **bloquear contato** que nao deseja mais receber campanhas de marketing via WhatsApp.
+
+<Info>
+  **Caso de uso:** Usuario recebe campanha de marketing, clica no botao "Nao quero mais receber", e o sistema chama esta funcao para bloquear futuras campanhas.
+</Info>
+
+---
+
+## Endpoint
+
+```
+POST {SUPABASE_URL}/rest/v1/rpc/block_contact
+```
+
+---
+
+## Request
+
+```typescript
+{
+  p_phone: string      // Telefone do contato (ex: "5511999999999")
+  p_blocked: boolean   // true = bloquear, false = desbloquear
+}
+```
+
+### Exemplo: Bloquear
+
+```bash
+curl -X POST "{SUPABASE_URL}/rest/v1/rpc/block_contact" \
+  -H "apikey: {SUPABASE_ANON_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "p_phone": "5511999999999",
+    "p_blocked": true
+  }'
+```
+
+### Exemplo: Desbloquear
+
+```bash
+curl -X POST "{SUPABASE_URL}/rest/v1/rpc/block_contact" \
+  -H "apikey: {SUPABASE_ANON_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "p_phone": "5511999999999",
+    "p_blocked": false
+  }'
+```
+
+---
+
+## Response
+
+```json
+{
+  "success": true,
+  "contact_id": "123e4567-e89b-12d3-a456-426614174000",
+  "bypass_bots": true,
+  "message": "Contato bloqueado com sucesso"
+}
+```
+
+---
+
+## Funcao SQL
+
+```sql
+CREATE OR REPLACE FUNCTION block_contact(
+  p_phone TEXT,
+  p_blocked BOOLEAN DEFAULT true
+)
+RETURNS JSONB AS $$
+DECLARE
+  v_contact_id UUID;
+  v_result JSONB;
+BEGIN
+  -- Buscar contato
+  SELECT id INTO v_contact_id
+  FROM whatsapp.contacts
+  WHERE phone_number = p_phone
+  AND deleted_at IS NULL
+  LIMIT 1;
+
+  IF v_contact_id IS NULL THEN
+    RETURN jsonb_build_object(
+      'success', false,
+      'error', 'Contato nao encontrado'
+    );
+  END IF;
+
+  -- Atualizar bypass_bots
+  UPDATE whatsapp.contacts
+  SET
+    bypass_bots = p_blocked,
+    updated_at = NOW()
+  WHERE id = v_contact_id;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'contact_id', v_contact_id,
+    'bypass_bots', p_blocked,
+    'message', CASE
+      WHEN p_blocked THEN 'Contato bloqueado com sucesso'
+      ELSE 'Contato desbloqueado com sucesso'
+    END
+  );
+END;
+$$ LANGUAGE plpgsql;
+```
+
+---
+
+## Uso em Campanhas
+
+### Fluxo do Template de Marketing
+
+```
+┌─────────────────────────────────────────┐
+│  TEMPLATE WHATSAPP (CAMPANHA)           │
+├─────────────────────────────────────────┤
+│                                         │
+│  Ola {NOME}!                            │
+│                                         │
+│  Temos uma oferta especial para voce!   │
+│                                         │
+│  [Ver oferta]  [Nao quero mais receber] │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+### Quando usuario clica "Nao quero mais receber"
+
+1. WhatsApp envia webhook com `button_reply`
+2. N8N detecta o botao clicado
+3. N8N chama `block_contact(phone, true)`
+4. Contato marcado com `bypass_bots = true`
+5. Proximas campanhas ignoram este contato
+
+---
+
+## Verificar Contatos Bloqueados
+
+```sql
+SELECT
+  phone_number,
+  name,
+  bypass_bots,
+  updated_at
+FROM whatsapp.contacts
+WHERE bypass_bots = true
+ORDER BY updated_at DESC;
+```
+
+---
+
+## Filtrar em Campanhas
+
+Ao disparar campanha, **excluir** contatos bloqueados:
+
+```sql
+SELECT phone_number, name
+FROM whatsapp.contacts
+WHERE organization_id = 'xxx'
+  AND bypass_bots = false  -- Apenas nao bloqueados
+  AND deleted_at IS NULL;
+```
+
+---
+
+## Alternativa: Comando @blacklist
+
+O comando `@blacklist` na mensagem faz a mesma coisa:
+
+```
+Atendente: @blacklist
+```
+
+Isso:
+1. Seta `bypass_bots = true`
+2. Fecha a sessao atual
+3. Registra `end_reason = 'blacklist'`
+
+---
+
+## Erros Possiveis
+
+| Erro | Causa | Solucao |
+|------|-------|---------|
+| `Contato nao encontrado` | Telefone invalido | Verificar formato |
+| `Permission denied` | API key invalida | Verificar credenciais |

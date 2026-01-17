@@ -11,42 +11,16 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Guias",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Inicio",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "index"
             ]
           },
           {
-            "group": "Customization",
-            "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
-            ]
-          },
-          {
-            "group": "N8N Agent",
+            "group": "Agente N8N",
             "pages": [
               "guides/n8n-agent/quickstart",
               "guides/n8n-agent/config-variables",
@@ -61,9 +35,23 @@
         "tab": "API Reference",
         "groups": [
           {
-            "group": "Overview",
+            "group": "Visao Geral",
             "pages": [
               "api-reference/introduction"
+            ]
+          },
+          {
+            "group": "Edge Function",
+            "pages": [
+              "api-reference/edge/process-message",
+              "api-reference/edge/arquitetura",
+              "api-reference/edge/step-organization",
+              "api-reference/edge/step-contact",
+              "api-reference/edge/step-session",
+              "api-reference/edge/step-message",
+              "api-reference/edge/step-buffer",
+              "api-reference/edge/step-whisper",
+              "api-reference/edge/step-vision"
             ]
           },
           {
@@ -84,18 +72,18 @@
             ]
           },
           {
+            "group": "Campanhas",
+            "pages": [
+              "api-reference/rpc/block-contact"
+            ]
+          },
+          {
             "group": "whatsapp.tables",
             "pages": [
               "api-reference/tables/sessions",
               "api-reference/tables/contacts",
               "api-reference/tables/messages",
               "api-reference/tables/events"
-            ]
-          },
-          {
-            "group": "Edge Functions",
-            "pages": [
-              "api-reference/edge/process-message"
             ]
           },
           {
@@ -149,12 +137,8 @@
     "options": [
      "copy",
      "view",
-     "chatgpt",
      "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
+     "cursor"
    ]
   },
   "footer": {
