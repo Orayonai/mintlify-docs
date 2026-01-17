@@ -11,7 +11,7 @@ Obter a sessao ativa de um contato ou criar uma nova se nao existir. Retorna tam
 ## Endpoint
 
 ```
-POST https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_or_create_session_with_last_message
+POST {SUPABASE_URL}/rest/v1/rpc/get_or_create_session_with_last_message
 ```
 
 ## Headers
@@ -71,7 +71,7 @@ Content-Type: application/json
 ## Exemplo cURL
 
 ```bash
-curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_or_create_session_with_last_message' \
+curl -X POST '{SUPABASE_URL}/rest/v1/rpc/get_or_create_session_with_last_message' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY' \
   -H 'Content-Type: application/json' \

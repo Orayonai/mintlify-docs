@@ -44,7 +44,7 @@ GET /rest/v1/sessions
 ### Exemplo cURL
 
 ```bash
-curl -X GET 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/sessions?status=eq.OPEN&limit=10' \
+curl -X GET '{SUPABASE_URL}/rest/v1/sessions?status=eq.OPEN&limit=10' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY' \
   -H 'Accept-Profile: whatsapp'
@@ -78,7 +78,7 @@ PATCH /rest/v1/sessions?id=eq.{session_id}
 ### Fechar Sessao
 
 ```bash
-curl -X PATCH 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/sessions?id=eq.123e4567-e89b-12d3-a456-426614174000' \
+curl -X PATCH '{SUPABASE_URL}/rest/v1/sessions?id=eq.123e4567-e89b-12d3-a456-426614174000' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY' \
   -H 'Content-Profile: whatsapp' \

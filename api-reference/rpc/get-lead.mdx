@@ -4,6 +4,10 @@ api: 'POST /rest/v1/rpc/get_lead_by_phone'
 description: 'Verifica se um lead ja esta cadastrado pelo telefone'
 ---
 
+<Note>
+  **Autenticacao:** Use seu token no campo "Bearer Token" do playground. O mesmo token sera usado para `apikey` e `Authorization`.
+</Note>
+
 ## Objetivo
 
 Verificar se um lead ja existe no sistema antes de coletar dados. **Deve ser a PRIMEIRA funcao executada em toda conversa.**
@@ -11,14 +15,14 @@ Verificar se um lead ja existe no sistema antes de coletar dados. **Deve ser a P
 ## Endpoint
 
 ```
-POST https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_lead_by_phone
+POST {baseUrl}/rest/v1/rpc/get_lead_by_phone
 ```
 
 ## Headers
 
 ```bash
-apikey: SUA_ANON_KEY
-Authorization: Bearer SUA_SERVICE_KEY
+apikey: SEU_SERVICE_ROLE_KEY
+Authorization: Bearer SEU_SERVICE_ROLE_KEY
 Content-Type: application/json
 ```
 
@@ -93,7 +97,7 @@ Content-Type: application/json
 ## Exemplo cURL
 
 ```bash
-curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_lead_by_phone' \
+curl -X POST '{SUPABASE_URL}/rest/v1/rpc/get_lead_by_phone' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY' \
   -H 'Content-Type: application/json' \
@@ -107,7 +111,7 @@ curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_lead_by_p
   "name": "verificar_cadastro",
   "toolDescription": "Use NO INICIO de cada conversa para verificar se lead existe",
   "method": "POST",
-  "url": "https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_lead_by_phone",
+  "url": "{SUPABASE_URL}/rest/v1/rpc/get_lead_by_phone",
   "body": {
     "p_phone_number": "={{ $json.contact.phone_number }}"
   }

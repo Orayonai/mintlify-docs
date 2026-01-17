@@ -33,7 +33,7 @@ GET /rest/v1/contacts?phone_number=eq.{telefone}
 ### Exemplo cURL
 
 ```bash
-curl -X GET 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/contacts?phone_number=eq.5511999999999' \
+curl -X GET '{SUPABASE_URL}/rest/v1/contacts?phone_number=eq.5511999999999' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY' \
   -H 'Accept-Profile: whatsapp'
@@ -68,7 +68,7 @@ GET /rest/v1/contacts?select=*,sessions(*)
 ### Exemplo
 
 ```bash
-curl -X GET 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/contacts?select=*,sessions(*)&limit=10' \
+curl -X GET '{SUPABASE_URL}/rest/v1/contacts?select=*,sessions(*)&limit=10' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY' \
   -H 'Accept-Profile: whatsapp'
@@ -85,7 +85,7 @@ PATCH /rest/v1/contacts?id=eq.{contact_id}
 ### Adicionar a Blacklist
 
 ```bash
-curl -X PATCH 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/contacts?id=eq.550e8400-e29b-41d4-a716-446655440000' \
+curl -X PATCH '{SUPABASE_URL}/rest/v1/contacts?id=eq.550e8400-e29b-41d4-a716-446655440000' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY' \
   -H 'Content-Profile: whatsapp' \

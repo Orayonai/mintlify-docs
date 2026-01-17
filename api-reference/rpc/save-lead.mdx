@@ -11,7 +11,7 @@ Persistir os dados do lead apos confirmacao ou recusa de participacao no evento.
 ## Endpoint
 
 ```
-POST https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/save_event_lead
+POST {SUPABASE_URL}/rest/v1/rpc/save_event_lead
 ```
 
 ## Headers
@@ -113,7 +113,7 @@ Content-Type: application/json
 ## Exemplo cURL
 
 ```bash
-curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/save_event_lead' \
+curl -X POST '{SUPABASE_URL}/rest/v1/rpc/save_event_lead' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY' \
   -H 'Content-Type: application/json' \
@@ -132,7 +132,7 @@ curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/save_event_le
   "name": "salvar_lead",
   "toolDescription": "Use APOS lead confirmar ou recusar participacao",
   "method": "POST",
-  "url": "https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/save_event_lead",
+  "url": "{SUPABASE_URL}/rest/v1/rpc/save_event_lead",
   "body": {
     "p_contact_id": "={{ $json.contact_id }}",
     "p_name": "={{ $fromAI('nome', 'Nome do lead', 'string') }}",

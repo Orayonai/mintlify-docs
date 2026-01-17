@@ -11,7 +11,7 @@ Obter lista de leads que podem receber mensagens (janela 24h do WhatsApp ativa).
 ## Endpoint Principal
 
 ```
-POST https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_leads_with_active_window
+POST {SUPABASE_URL}/rest/v1/rpc/get_leads_with_active_window
 ```
 
 ## Headers
@@ -108,7 +108,7 @@ Valida leads em lote com dados do Chatwoot:
 ## Exemplo cURL
 
 ```bash
-curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_leads_with_active_window' \
+curl -X POST '{SUPABASE_URL}/rest/v1/rpc/get_leads_with_active_window' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY' \
   -H 'Content-Type: application/json' \

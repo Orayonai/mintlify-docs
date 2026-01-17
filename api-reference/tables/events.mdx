@@ -24,7 +24,7 @@ GET /rest/v1/tb_eventos?id=eq.{id}
 ### Exemplo cURL
 
 ```bash
-curl -X GET 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/tb_eventos?id=eq.1' \
+curl -X GET '{SUPABASE_URL}/rest/v1/tb_eventos?id=eq.1' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY'
 ```
@@ -69,7 +69,7 @@ PATCH /rest/v1/tb_eventos?id=eq.{id}
 ### Atualizar Data e Link
 
 ```bash
-curl -X PATCH 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/tb_eventos?id=eq.1' \
+curl -X PATCH '{SUPABASE_URL}/rest/v1/tb_eventos?id=eq.1' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY' \
   -H 'Prefer: return=representation' \
@@ -133,7 +133,7 @@ POST /rest/v1/tb_eventos
 ```json
 {
   "method": "PATCH",
-  "url": "https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/tb_eventos",
+  "url": "{SUPABASE_URL}/rest/v1/tb_eventos",
   "queryParameters": [
     { "name": "id", "value": "eq.1" }
   ],

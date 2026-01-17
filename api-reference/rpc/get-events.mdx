@@ -11,7 +11,7 @@ Obter informacoes atualizadas do proximo evento (data, horario, link Zoom). **De
 ## Endpoint
 
 ```
-POST https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_events_by_language
+POST {SUPABASE_URL}/rest/v1/rpc/get_events_by_language
 ```
 
 ## Headers
@@ -100,7 +100,7 @@ Ou sem parametro para retornar todos:
 ## Exemplo cURL
 
 ```bash
-curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_events_by_language' \
+curl -X POST '{SUPABASE_URL}/rest/v1/rpc/get_events_by_language' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY' \
   -H 'Content-Type: application/json' \
@@ -114,7 +114,7 @@ curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_events_by
   "name": "dados_evento",
   "toolDescription": "Use SEMPRE no inicio, APOS verificar_cadastro. Retorna dados do evento.",
   "method": "POST",
-  "url": "https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/get_events_by_language",
+  "url": "{SUPABASE_URL}/rest/v1/rpc/get_events_by_language",
   "body": {}
 }
 ```

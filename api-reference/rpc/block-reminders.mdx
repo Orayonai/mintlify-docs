@@ -18,7 +18,7 @@ Controlar se um lead deve receber lembretes automaticos (disparos em massa). Uti
 ### Endpoint
 
 ```
-POST https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/block_lead_reminders_by_phone
+POST {SUPABASE_URL}/rest/v1/rpc/block_lead_reminders_by_phone
 ```
 
 ### Request Body
@@ -45,7 +45,7 @@ POST https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/block_lead_reminders_b
 ### Exemplo cURL
 
 ```bash
-curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/block_lead_reminders_by_phone' \
+curl -X POST '{SUPABASE_URL}/rest/v1/rpc/block_lead_reminders_by_phone' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY' \
   -H 'Content-Type: application/json' \
@@ -59,7 +59,7 @@ curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/block_lead_re
 ### Endpoint
 
 ```
-POST https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/unblock_lead_reminders_by_phone
+POST {SUPABASE_URL}/rest/v1/rpc/unblock_lead_reminders_by_phone
 ```
 
 ### Request Body
@@ -82,7 +82,7 @@ POST https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/unblock_lead_reminders
 ### Exemplo cURL
 
 ```bash
-curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/unblock_lead_reminders_by_phone' \
+curl -X POST '{SUPABASE_URL}/rest/v1/rpc/unblock_lead_reminders_by_phone' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY' \
   -H 'Content-Type: application/json' \
@@ -97,7 +97,7 @@ curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/unblock_lead_
 {
   "name": "BloquearDisparos",
   "method": "POST",
-  "url": "https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/block_lead_reminders_by_phone",
+  "url": "{SUPABASE_URL}/rest/v1/rpc/block_lead_reminders_by_phone",
   "body": {
     "p_phone_number": "={{ $json.body.messages[0].conversation.contact_inbox.source_id }}"
   }
@@ -110,7 +110,7 @@ curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/unblock_lead_
 {
   "name": "DesbloquearDisparos",
   "method": "POST",
-  "url": "https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/unblock_lead_reminders_by_phone",
+  "url": "{SUPABASE_URL}/rest/v1/rpc/unblock_lead_reminders_by_phone",
   "body": {
     "p_phone_number": "={{ $json.body.messages[0].conversation.contact_inbox.source_id }}"
   }

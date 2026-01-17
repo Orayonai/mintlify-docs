@@ -14,7 +14,7 @@ Pausar o atendimento automatico (IA) por um periodo determinado. Usado quando:
 ## Endpoint
 
 ```
-POST https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/pause_session_by_phone
+POST {SUPABASE_URL}/rest/v1/rpc/pause_session_by_phone
 ```
 
 ## Headers
@@ -69,7 +69,7 @@ Content-Type: application/json
 ## Exemplo cURL
 
 ```bash
-curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/pause_session_by_phone' \
+curl -X POST '{SUPABASE_URL}/rest/v1/rpc/pause_session_by_phone' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY' \
   -H 'Content-Type: application/json' \
@@ -87,7 +87,7 @@ curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/pause_session
   "name": "EncerrarConversaComBot",
   "toolDescription": "Use quando detectar que esta conversando com IA ou bot",
   "method": "POST",
-  "url": "https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/pause_session_by_phone",
+  "url": "{SUPABASE_URL}/rest/v1/rpc/pause_session_by_phone",
   "body": {
     "p_phone_number": "={{ $json.contact.phone_number }}",
     "p_hours": 24,
@@ -103,7 +103,7 @@ curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/pause_session
   "name": "transferir_humano",
   "toolDescription": "Use quando lead pedir para falar com humano",
   "method": "POST",
-  "url": "https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/rpc/pause_session_by_phone",
+  "url": "{SUPABASE_URL}/rest/v1/rpc/pause_session_by_phone",
   "body": {
     "p_phone_number": "={{ $json.contact.phone_number }}",
     "p_hours": 72,

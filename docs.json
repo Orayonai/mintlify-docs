@@ -2,6 +2,16 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Orayon",
+  "api": {
+    "baseUrl": "https://tkrjfifrwttikwsghuju.supabase.co",
+    "auth": {
+      "method": "bearer",
+      "name": "Authorization"
+    },
+    "playground": {
+      "mode": "show"
+    }
+  },
   "colors": {
     "primary": "#5636d1",
     "light": "#7C5CE7",

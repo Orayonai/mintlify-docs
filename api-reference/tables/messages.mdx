@@ -33,7 +33,7 @@ GET /rest/v1/messages?session_id=eq.{session_id}&order=created_at.asc
 ### Exemplo cURL
 
 ```bash
-curl -X GET 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/messages?session_id=eq.123e4567-e89b-12d3-a456-426614174000&order=created_at.asc&limit=50' \
+curl -X GET '{SUPABASE_URL}/rest/v1/messages?session_id=eq.123e4567-e89b-12d3-a456-426614174000&order=created_at.asc&limit=50' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY' \
   -H 'Accept-Profile: whatsapp'
@@ -96,7 +96,7 @@ POST /rest/v1/messages
 ### Exemplo cURL
 
 ```bash
-curl -X POST 'https://tkrjfifrwttikwsghuju.supabase.co/rest/v1/messages' \
+curl -X POST '{SUPABASE_URL}/rest/v1/messages' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY' \
   -H 'Content-Profile: whatsapp' \
