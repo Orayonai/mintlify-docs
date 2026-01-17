@@ -136,7 +136,7 @@ O no **Config** (tipo Set) centraliza todas as configuracoes do Agente. Abaixo e
 
   **Valores possiveis:**
   - `"META"` - WhatsApp Business Cloud API (oficial)
-  - `"UAZAPI"` - APIs nao-oficiais (UAZAPI, Evolution)
+  - `"UAZAPI"` - API alternativa UAZAPI
 
   <Info>
     Essa configuracao define qual conjunto de credenciais sera usado.
@@ -173,7 +173,7 @@ O no **Config** (tipo Set) centraliza todas as configuracoes do Agente. Abaixo e
 
 ---
 
-## UAZAPI / Evolution
+## UAZAPI
 
 <Note>
   Apenas necessario se `UnderlyingAPI = "UAZAPI"`
@@ -182,9 +182,7 @@ O no **Config** (tipo Set) centraliza todas as configuracoes do Agente. Abaixo e
 <ParamField path="UAZAPI_BASE_URL" type="string">
   URL base da API.
 
-  **Exemplos:**
-  - UAZAPI: `"https://api.uazapi.com"`
-  - Evolution: `"https://sua-evolution.com"`
+  **Exemplo:** `"https://api.uazapi.com"`
 </ParamField>
 
 <ParamField path="UAZAPI_TOKEN" type="string">

@@ -1,12 +1,12 @@
 ---
-title: 'UAZAPI / Evolution'
-description: 'Como configurar APIs nao-oficiais do WhatsApp'
+title: 'UAZAPI'
+description: 'Como configurar a API UAZAPI para WhatsApp'
 icon: 'robot'
 ---
 
 ## Visao Geral
 
-**UAZAPI** e **Evolution API** sao alternativas nao-oficiais para conectar ao WhatsApp. Elas oferecem:
+**UAZAPI** e uma alternativa para conectar ao WhatsApp. Oferece:
 
 - Configuracao mais rapida
 - Sem necessidade de aprovacao da Meta
@@ -14,25 +14,18 @@ icon: 'robot'
 - Mais recursos (enquetes, reacoes, etc)
 
 <Warning>
-  APIs nao-oficiais podem ser bloqueadas pelo WhatsApp. Use por sua conta e risco.
+  APIs alternativas podem ser bloqueadas pelo WhatsApp. Use por sua conta e risco.
 </Warning>
 
 ---
 
-## Escolha sua API
+## Sobre UAZAPI
 
-<CardGroup cols={2}>
-  <Card title="UAZAPI" icon="cloud">
-    Servico hospedado, pronto para usar. Pago por mensagem.
+<Card title="UAZAPI" icon="cloud">
+  Servico hospedado, pronto para usar. Pago por mensagem.
 
-    [uazapi.com](https://uazapi.com)
-  </Card>
-  <Card title="Evolution API" icon="server">
-    Self-hosted, codigo aberto. Voce hospeda.
-
-    [evolution-api.com](https://evolution-api.com)
-  </Card>
-</CardGroup>
+  [uazapi.com](https://uazapi.com)
+</Card>
 
 ---
 
@@ -59,7 +52,15 @@ Apos conectar, voce tera:
 | **Base URL** | URL da API (ex: `https://api.uazapi.com`) |
 | **Token** | Dashboard > Instancia > Token |
 
-### Passo 4: Configurar no N8N
+### Passo 4: Configurar Webhook
+
+Configure o webhook na sua instancia UAZAPI apontando para:
+
+```
+https://seu-n8n.com/webhook/whatsapp
+```
+
+### Passo 5: Configurar no N8N
 
 ```json
 {
@@ -71,73 +72,9 @@ Apos conectar, voce tera:
 
 ---
 
-## Configurar Evolution API
-
-### Passo 1: Instalar
-
-```bash
-# Docker
-docker run -d \
-  --name evolution-api \
-  -p 8080:8080 \
-  -e AUTHENTICATION_API_KEY=sua-chave-admin \
-  atendai/evolution-api:latest
-```
-
-Ou use o [guia de instalacao oficial](https://doc.evolution-api.com).
-
-### Passo 2: Criar Instancia
-
-```bash
-curl -X POST "https://sua-evolution.com/instance/create" \
-  -H "apikey: sua-chave-admin" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "instanceName": "minha-instancia",
-    "qrcode": true
-  }'
-```
-
-### Passo 3: Conectar WhatsApp
-
-1. Acesse o manager: `https://sua-evolution.com/manager`
-2. Selecione a instancia
-3. Escaneie o QR Code
-
-### Passo 4: Configurar Webhook
-
-```bash
-curl -X POST "https://sua-evolution.com/webhook/set/minha-instancia" \
-  -H "apikey: sua-chave-admin" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "url": "https://seu-n8n.com/webhook/whatsapp",
-    "webhook_by_events": false,
-    "events": [
-      "MESSAGES_UPSERT"
-    ]
-  }'
-```
-
-### Passo 5: Configurar no N8N
-
-```json
-{
-  "UnderlyingAPI": "UAZAPI",
-  "UAZAPI_BASE_URL": "https://sua-evolution.com",
-  "UAZAPI_TOKEN": "sua-chave-admin"
-}
-```
-
-<Tip>
-  Evolution API usa o mesmo formato que UAZAPI, entao configure como `"UAZAPI"`.
-</Tip>
-
----
-
 ## Funcionalidades Extras
 
-APIs nao-oficiais suportam recursos que a META nao oferece:
+UAZAPI suporta recursos que a META nao oferece:
 
 ### Grupos
 
@@ -184,10 +121,10 @@ APIs nao-oficiais suportam recursos que a META nao oferece:
 
 ## Indicador "Digitando..."
 
-Para mostrar que o bot esta "digitando...", a Evolution API usa:
+Para mostrar que o bot esta "digitando...", UAZAPI usa:
 
 ```bash
-POST /chat/presence/minha-instancia
+POST /chat/presence/{instancia}
 {
   "number": "5511999999999",
   "presence": "composing"
@@ -200,7 +137,7 @@ O sistema envia isso automaticamente antes de processar a mensagem.
 
 ## Exemplo de Webhook Recebido
 
-Quando alguem envia mensagem, a Evolution envia:
+Quando alguem envia mensagem, UAZAPI envia:
 
 ```json
 {
@@ -227,8 +164,8 @@ O no **Extrair Dados** normaliza isso automaticamente.
 
 ## Comparativo META vs UAZAPI
 
-| Recurso | META | UAZAPI/Evolution |
-|---------|------|------------------|
+| Recurso | META | UAZAPI |
+|---------|------|--------|
 | Grupos | Nao | Sim |
 | Enquetes | Nao | Sim |
 | Reacoes | Limitado | Completo |
@@ -236,7 +173,24 @@ O no **Extrair Dados** normaliza isso automaticamente.
 | "Digitando..." | Sim | Sim |
 | Aprovacao Meta | Necessaria | Nao |
 | Risco de bloqueio | Baixo | Medio |
-| Custo | Por mensagem | Self-hosted gratis |
+| Custo | Por mensagem | Por mensagem |
+
+---
+
+## Integracao com ChatWoot (CRM)
+
+<Info>
+  O sistema suporta **ChatWoot** como CRM para gestao de atendimentos.
+</Info>
+
+ChatWoot pode ser integrado para:
+
+- Visualizar conversas em dashboard
+- Transferir para atendentes humanos
+- Historico completo de mensagens
+- Metricas e relatorios
+
+Para configurar ChatWoot, consulte a documentacao do ChatWoot.
 
 ---
 

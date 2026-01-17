@@ -12,7 +12,7 @@ Este guia mostra como configurar o **Agente de WhatsApp** no N8N, conectando com
   **Requisitos:**
   - Conta N8N (self-hosted ou cloud)
   - Projeto Supabase com Edge Functions
-  - WhatsApp Business API (META) ou UAZAPI/Evolution
+  - WhatsApp Business API (META Cloud API ou UAZAPI)
 </Info>
 
 ---
@@ -99,8 +99,8 @@ O sistema suporta duas APIs para enviar mensagens:
   <Card title="META Cloud API" icon="meta" href="/guides/n8n-agent/meta-api">
     API oficial do WhatsApp Business. Mais estavel, requer aprovacao da Meta.
   </Card>
-  <Card title="UAZAPI / Evolution" icon="robot" href="/guides/n8n-agent/uazapi">
-    APIs nao-oficiais. Mais flexivel, configuracao rapida.
+  <Card title="UAZAPI" icon="robot" href="/guides/n8n-agent/uazapi">
+    API alternativa. Mais flexivel, configuracao rapida.
   </Card>
 </CardGroup>
 
@@ -129,7 +129,7 @@ No no Config, defina qual API usar:
 https://seu-n8n.com/webhook/whatsapp
 ```
 
-### Para UAZAPI/Evolution
+### Para UAZAPI
 
 Configure o webhook na sua instancia apontando para:
 

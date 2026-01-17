@@ -25,86 +25,52 @@ Esta e a documentacao tecnica da **Orayon AI** - plataforma de automacao de aten
 
 ## Arquitetura
 
-<Frame>
-```mermaid
-flowchart TB
-    subgraph ENTRADA["📱 Entrada"]
-        WA[("WhatsApp\nBusiness")]
-        META["META Cloud API"]
-        EVOL["Evolution API"]
-    end
-
-    subgraph N8N["⚡ N8N Workflow"]
-        WH["Webhook"]
-        EXT["Extrair Dados"]
-        CFG["Config"]
-    end
-
-    subgraph SUPABASE["🗄️ Supabase"]
-        EDGE["Edge Function\nprocess-message"]
-
-        subgraph STEPS["Steps"]
-            S1["1. Organization"]
-            S2["2. Contact"]
-            S3["3. Session"]
-            S4["4. Message"]
-        end
-
-        subgraph TABLES["Tables"]
-            TB1[("organizations")]
-            TB2[("contacts")]
-            TB3[("sessions")]
-            TB4[("messages")]
-        end
-
-        RPC["RPC Functions"]
-        CRON["pg_cron Jobs"]
-    end
-
-    subgraph EXTERNAL["🔌 Servicos Externos"]
-        REDIS[("Redis/Upstash\nBuffer")]
-        OPENAI["OpenAI\nWhisper + Vision"]
-    end
-
-    subgraph AI["🤖 Agente IA"]
-        AGENT["LangChain Agent"]
-        TOOLS["Agent Tools"]
-        MEM["Memory"]
-    end
-
-    WA --> META
-    WA --> EVOL
-    META --> WH
-    EVOL --> WH
-    WH --> EXT
-    CFG --> EXT
-    EXT --> EDGE
-
-    EDGE --> S1 --> S2 --> S3 --> S4
-    S1 --> TB1
-    S2 --> TB2
-    S3 --> TB3
-    S4 --> TB4
-
-    EDGE <--> REDIS
-    EDGE <--> OPENAI
-    EDGE --> AGENT
-
-    AGENT --> TOOLS
-    TOOLS --> RPC
-    AGENT <--> MEM
-    MEM <--> REDIS
-
-    CRON --> TB3
-    CRON --> TB4
-
-    style ENTRADA fill:#1a1a2e,stroke:#9b51e0,color:#fff
-    style N8N fill:#1a1a2e,stroke:#0693e3,color:#fff
-    style SUPABASE fill:#1a1a2e,stroke:#3ecf8e,color:#fff
-    style EXTERNAL fill:#1a1a2e,stroke:#ff6900,color:#fff
-    style AI fill:#1a1a2e,stroke:#9b51e0,color:#fff
 ```
-</Frame>
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                              VISAO GERAL DO SISTEMA                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
+  │    WhatsApp     │      │      N8N        │      │    Supabase     │
+  │    Business     │─────▶│    Workflow     │─────▶│  Edge Function  │
+  │  META / UAZAPI  │      │                 │      │                 │
+  └─────────────────┘      └─────────────────┘      └────────┬────────┘
+                                                             │
+                           ┌─────────────────────────────────┼─────────────────┐
+                           │                                 ▼                 │
+                           │  ┌──────────────────────────────────────────┐    │
+                           │  │           PROCESSAMENTO (Steps)          │    │
+                           │  │                                          │    │
+                           │  │  1. Organization  ──▶  organizations     │    │
+                           │  │  2. Contact       ──▶  contacts          │    │
+                           │  │  3. Session       ──▶  sessions          │    │
+                           │  │  4. Message       ──▶  messages          │    │
+                           │  │  5. Buffer (Redis)                       │    │
+                           │  │  6. Whisper (audio)                      │    │
+                           │  │  7. Vision (imagens)                     │    │
+                           │  └──────────────────────────────────────────┘    │
+                           │                                                   │
+                           └───────────────────────────────────────────────────┘
+                                                             │
+                                                             ▼
+  ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
+  │     OpenAI      │      │   Redis/Upstash │      │   LangChain     │
+  │  Whisper+Vision │◀────▶│     Buffer      │◀────▶│   Agent + RPC   │
+  └─────────────────┘      └─────────────────┘      └─────────────────┘
+```
+
+### Componentes Principais
+
+| Camada | Componente | Funcao |
+|--------|------------|--------|
+| **Entrada** | META Cloud API | API oficial WhatsApp Business |
+| **Entrada** | UAZAPI | API alternativa WhatsApp |
+| **Orquestracao** | N8N Workflow | Recebe webhooks, normaliza dados |
+| **Processamento** | Edge Function | Processa mensagens em steps |
+| **Storage** | PostgreSQL | Armazena organizations, contacts, sessions, messages |
+| **Cache** | Redis/Upstash | Buffer de mensagens, memoria do agente |
+| **IA** | OpenAI | Whisper (audio) + Vision (imagens) |
+| **Agente** | LangChain | Agente IA com tools/RPCs |
 
 ---
 
@@ -112,7 +78,7 @@ flowchart TB
 
 <Steps>
   <Step title="Recebimento">
-    WhatsApp envia webhook para N8N (META ou Evolution API)
+    WhatsApp envia webhook para N8N (META Cloud API ou UAZAPI)
   </Step>
   <Step title="Normalizacao">
     N8N extrai e normaliza dados no formato padrao
