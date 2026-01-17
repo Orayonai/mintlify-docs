@@ -1,0 +1,104 @@
+---
+title: 'Salvar Evento Calendar'
+api: 'POST /rest/v1/rpc/save_calendar_event'
+description: 'Registra que evento foi criado no Google Calendar'
+---
+
+## Objetivo
+
+Salvar confirmacao de que o evento foi criado com sucesso no Google Calendar. Atualiza o registro do lead na tabela `calendar_events`.
+
+## Endpoint
+
+```
+POST {SUPABASE_URL}/rest/v1/rpc/save_calendar_event
+```
+
+## Headers
+
+```bash
+apikey: SUA_ANON_KEY
+Authorization: Bearer SUA_SERVICE_KEY
+Content-Type: application/json
+```
+
+## Request Body
+
+<ParamField body="p_phone_number" type="string" required>
+  Telefone do lead (com DDI)
+</ParamField>
+
+<ParamField body="p_lead_email" type="string">
+  Email do lead (para convite)
+</ParamField>
+
+<ParamField body="p_event_created" type="boolean" required>
+  Se o evento foi criado com sucesso
+</ParamField>
+
+<ParamField body="p_event_date" type="string">
+  Data/hora do evento criado (ISO 8601)
+</ParamField>
+
+```json
+{
+  "p_phone_number": "5511999999999",
+  "p_lead_email": "lead@email.com",
+  "p_event_created": true,
+  "p_event_date": "2026-01-20T10:00:00-03:00"
+}
+```
+
+## Response
+
+```json
+{
+  "success": true,
+  "calendar_event_id": "uuid-do-registro"
+}
+```
+
+## Exemplo cURL
+
+```bash
+curl -X POST '{SUPABASE_URL}/rest/v1/rpc/save_calendar_event' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "p_phone_number": "5511999999999",
+    "p_lead_email": "lead@email.com",
+    "p_event_created": true,
+    "p_event_date": "2026-01-20T10:00:00-03:00"
+  }'
+```
+
+## Exemplo N8N - Apos Criar Evento
+
+```json
+{
+  "name": "Salvar_evento_criado",
+  "method": "POST",
+  "url": "{SUPABASE_URL}/rest/v1/rpc/save_calendar_event",
+  "body": {
+    "p_phone_number": "={{ $('create-event').item.json.body.customerPhoneNumber }}",
+    "p_lead_email": "={{ $('create-event').item.json.body.customerEmail }}",
+    "p_event_created": true,
+    "p_event_date": "={{ $('NormalizarEvento').item.json.evento.inicio }}"
+  }
+}
+```
+
+## Fluxo Completo de Agendamento
+
+```
+1. Lead confirma data/hora no WhatsApp
+2. save_event_lead (salvar dados do lead)
+3. get_oauth_token (obter credenciais Google)
+4. POST Google Calendar API (criar evento)
+5. save_calendar_event ← ESTA FUNCAO
+```
+
+<Info>
+  O registro na tabela `calendar_events` permite rastrear quais leads ja tem evento criado no Calendar.
+</Info>

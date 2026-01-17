@@ -1,0 +1,108 @@
+---
+title: 'Buscar Token OAuth'
+api: 'POST /rest/v1/rpc/get_oauth_token'
+description: 'Retorna token OAuth do Google Calendar por email'
+---
+
+## Objetivo
+
+Buscar credenciais OAuth salvas para integrar com Google Calendar. Usado para verificar se existe token valido antes de criar eventos.
+
+## Endpoint
+
+```
+POST {SUPABASE_URL}/rest/v1/rpc/get_oauth_token
+```
+
+## Headers
+
+```bash
+apikey: SUA_ANON_KEY
+Authorization: Bearer SUA_SERVICE_KEY
+Content-Type: application/json
+```
+
+## Request Body
+
+<ParamField body="p_email" type="string" required>
+  Email da conta Google autorizada
+</ParamField>
+
+```json
+{
+  "p_email": "usuario@gmail.com"
+}
+```
+
+## Response
+
+<ResponseField name="email" type="string">
+  Email da conta
+</ResponseField>
+
+<ResponseField name="access_token" type="string">
+  Token de acesso atual
+</ResponseField>
+
+<ResponseField name="refresh_token" type="string">
+  Token para renovar acesso
+</ResponseField>
+
+<ResponseField name="token_type" type="string">
+  Tipo do token (Bearer)
+</ResponseField>
+
+<ResponseField name="scope" type="string">
+  Escopos autorizados
+</ResponseField>
+
+<ResponseField name="expires_at" type="timestamp">
+  Data/hora de expiracao
+</ResponseField>
+
+```json
+{
+  "email": "usuario@gmail.com",
+  "access_token": "ya29.a0AfH6SMBx...",
+  "refresh_token": "1//0eXy...",
+  "token_type": "Bearer",
+  "scope": "https://www.googleapis.com/auth/calendar",
+  "expires_at": "2026-01-17T20:00:00Z"
+}
+```
+
+## Exemplo cURL
+
+```bash
+curl -X POST '{SUPABASE_URL}/rest/v1/rpc/get_oauth_token' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{"p_email": "usuario@gmail.com"}'
+```
+
+## Exemplo N8N
+
+```json
+{
+  "name": "ConsultarToken",
+  "method": "POST",
+  "url": "{SUPABASE_URL}/rest/v1/rpc/get_oauth_token",
+  "body": {
+    "p_email": "={{ $json.TokenEmail }}"
+  }
+}
+```
+
+## Fluxo de Uso
+
+```
+1. get_oauth_token (verificar se existe)
+2. Se expirado → refresh_token no Google
+3. update_oauth_token (salvar novo access_token)
+4. Usar token para criar evento no Calendar
+```
+
+<Warning>
+  Se o token estiver expirado, use o `refresh_token` para obter novo `access_token` na API do Google.
+</Warning>

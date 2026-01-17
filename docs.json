@@ -82,6 +82,15 @@
             ]
           },
           {
+            "group": "OAuth / Calendar",
+            "pages": [
+              "api-reference/rpc/get-oauth-token",
+              "api-reference/rpc/update-oauth-token",
+              "api-reference/rpc/upsert-oauth-token",
+              "api-reference/rpc/save-calendar-event"
+            ]
+          },
+          {
             "group": "Campanhas",
             "pages": [
               "api-reference/rpc/block-contact"
@@ -90,6 +99,7 @@
           {
             "group": "whatsapp.tables",
             "pages": [
+              "api-reference/tables/organizations",
               "api-reference/tables/sessions",
               "api-reference/tables/contacts",
               "api-reference/tables/messages",

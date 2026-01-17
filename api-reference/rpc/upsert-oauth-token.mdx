@@ -1,0 +1,115 @@
+---
+title: 'Criar/Atualizar Token OAuth'
+api: 'POST /rest/v1/rpc/upsert_oauth_token'
+description: 'Insere ou atualiza token OAuth completo'
+---
+
+## Objetivo
+
+Salvar credenciais OAuth completas apos autorizacao inicial do usuario. Usado no callback do fluxo OAuth do Google.
+
+## Endpoint
+
+```
+POST {SUPABASE_URL}/rest/v1/rpc/upsert_oauth_token
+```
+
+## Headers
+
+```bash
+apikey: SUA_ANON_KEY
+Authorization: Bearer SUA_SERVICE_KEY
+Content-Type: application/json
+```
+
+## Request Body
+
+<ParamField body="p_email" type="string" required>
+  Email da conta Google autorizada
+</ParamField>
+
+<ParamField body="p_access_token" type="string" required>
+  Token de acesso
+</ParamField>
+
+<ParamField body="p_refresh_token" type="string" required>
+  Token para renovar acesso
+</ParamField>
+
+<ParamField body="p_token_type" type="string">
+  Tipo do token (default: Bearer)
+</ParamField>
+
+<ParamField body="p_scope" type="string">
+  Escopos autorizados
+</ParamField>
+
+<ParamField body="p_expires_at" type="timestamp">
+  Data/hora de expiracao
+</ParamField>
+
+```json
+{
+  "p_email": "usuario@gmail.com",
+  "p_access_token": "ya29.a0AfH6SMBx...",
+  "p_refresh_token": "1//0eXy...",
+  "p_token_type": "Bearer",
+  "p_scope": "https://www.googleapis.com/auth/calendar",
+  "p_expires_at": "2026-01-17T20:00:00Z"
+}
+```
+
+## Response
+
+```json
+{
+  "success": true,
+  "message": "Token salvo com sucesso"
+}
+```
+
+## Exemplo cURL
+
+```bash
+curl -X POST '{SUPABASE_URL}/rest/v1/rpc/upsert_oauth_token' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "p_email": "usuario@gmail.com",
+    "p_access_token": "ya29.a0AfH6SMBx...",
+    "p_refresh_token": "1//0eXy...",
+    "p_token_type": "Bearer",
+    "p_scope": "https://www.googleapis.com/auth/calendar",
+    "p_expires_at": "2026-01-17T20:00:00Z"
+  }'
+```
+
+## Exemplo N8N - Callback OAuth
+
+```json
+{
+  "name": "SalvarTokenSupabase",
+  "method": "POST",
+  "url": "{SUPABASE_URL}/rest/v1/rpc/upsert_oauth_token",
+  "body": {
+    "p_email": "={{ $json.email }}",
+    "p_access_token": "={{ $json.access_token }}",
+    "p_refresh_token": "={{ $json.refresh_token }}",
+    "p_token_type": "={{ $json.token_type }}",
+    "p_scope": "={{ $json.scope }}",
+    "p_expires_at": "={{ $json.expires_at }}"
+  }
+}
+```
+
+## Diferenca entre update e upsert
+
+| Funcao | Uso |
+|--------|-----|
+| `upsert_oauth_token` | Autorizacao inicial (salva TUDO) |
+| `update_oauth_token` | Refresh token (atualiza apenas access_token) |
+
+<Tip>
+  Use `upsert` no callback do OAuth (primeira vez) e `update` apos refresh.
+</Tip>

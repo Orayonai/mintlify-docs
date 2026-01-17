@@ -1,0 +1,137 @@
+---
+title: 'Organizations'
+description: 'Operacoes REST na tabela whatsapp.organizations'
+---
+
+## Visao Geral
+
+A tabela `organizations` armazena as empresas/organizacoes que utilizam o sistema. Cada organizacao tem suas proprias configuracoes, contatos e sessoes.
+
+## Schema
+
+```
+whatsapp.organizations
+```
+
+## Headers Obrigatorios
+
+```bash
+apikey: SUA_ANON_KEY
+Authorization: Bearer SUA_SERVICE_KEY
+Accept-Profile: whatsapp
+Content-Profile: whatsapp
+```
+
+---
+
+## GET - Buscar Organizacao por Nome
+
+```
+GET /rest/v1/organizations?name=eq.{nome}
+```
+
+### Exemplo cURL
+
+```bash
+curl -X GET '{SUPABASE_URL}/rest/v1/organizations?name=eq.MinhaEmpresa' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Accept-Profile: whatsapp'
+```
+
+### Response
+
+```json
+[
+  {
+    "id": "org-uuid-123",
+    "name": "MinhaEmpresa",
+    "phone_number": "5511999999999",
+    "timezone": "America/Sao_Paulo",
+    "language": "pt-BR",
+    "created_at": "2026-01-01T00:00:00Z",
+    "updated_at": "2026-01-15T10:00:00Z"
+  }
+]
+```
+
+---
+
+## GET - Buscar por Telefone
+
+```
+GET /rest/v1/organizations?phone_number=eq.{telefone}
+```
+
+### Exemplo
+
+```bash
+curl -X GET '{SUPABASE_URL}/rest/v1/organizations?phone_number=eq.5511999999999' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Accept-Profile: whatsapp'
+```
+
+---
+
+## Campos da Tabela
+
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `id` | uuid | ID unico da organizacao |
+| `name` | text | Nome da organizacao (unico) |
+| `phone_number` | text | Numero WhatsApp Business |
+| `timezone` | text | Fuso horario (ex: America/Sao_Paulo) |
+| `language` | text | Idioma padrao (pt-BR, en-US, es-ES) |
+| `created_at` | timestamp | Data de criacao |
+| `updated_at` | timestamp | Ultima atualizacao |
+
+---
+
+## Relacoes
+
+A organizacao e a entidade raiz que conecta:
+
+```
+organizations
+    ├── contacts (1:N)
+    │       └── sessions (1:N)
+    │               └── messages (1:N)
+    └── configuracoes especificas
+```
+
+---
+
+## Uso no Config (N8N)
+
+O campo `EmpresaNome` no no Config deve corresponder ao `name` da organizacao:
+
+```json
+{
+  "EmpresaNome": "MinhaEmpresa",
+  "OwnerPhone": "5511999999999"
+}
+```
+
+<Warning>
+  O nome deve ser EXATAMENTE igual ao cadastrado na tabela. Case-sensitive.
+</Warning>
+
+---
+
+## Criar Nova Organizacao
+
+```bash
+curl -X POST '{SUPABASE_URL}/rest/v1/organizations' \
+  -H 'apikey: SUA_ANON_KEY' \
+  -H 'Authorization: Bearer SUA_SERVICE_KEY' \
+  -H 'Content-Profile: whatsapp' \
+  -H 'Prefer: return=representation' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "NovaEmpresa",
+    "phone_number": "5511888888888",
+    "timezone": "America/Sao_Paulo",
+    "language": "pt-BR"
+  }'
+```
