@@ -13,8 +13,7 @@
   ],
   "security": [
     {
-      "apiKey": [],
-      "bearerAuth": []
+      "apiKey": []
     }
   ],
   "components": {
@@ -35,22 +34,22 @@
       "AcceptProfileWhatsapp": {
         "name": "Accept-Profile",
         "in": "header",
-        "required": true,
+        "required": false,
         "schema": {
           "type": "string",
           "default": "whatsapp"
         },
-        "description": "Schema whatsapp"
+        "description": "Schema whatsapp (enviado automaticamente)"
       },
       "ContentProfileWhatsapp": {
         "name": "Content-Profile",
         "in": "header",
-        "required": true,
+        "required": false,
         "schema": {
           "type": "string",
           "default": "whatsapp"
         },
-        "description": "Schema whatsapp"
+        "description": "Schema whatsapp (enviado automaticamente)"
       }
     }
   },
