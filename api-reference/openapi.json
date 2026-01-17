@@ -1,216 +1,628 @@
 {
-  "openapi": "3.1.0",
+  "openapi": "3.0.3",
   "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
-    "license": {
-      "name": "MIT"
-    },
+    "title": "Orayon Supabase API",
+    "description": "API REST e RPC do Supabase para o sistema Orayon",
     "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
+      "url": "https://tkrjfifrwttikwsghuju.supabase.co",
+      "description": "Supabase Production"
     }
   ],
   "security": [
     {
+      "apiKey": [],
       "bearerAuth": []
     }
   ],
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "apikey",
+        "description": "Supabase anon/service key"
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Supabase service role key"
+      }
+    },
+    "parameters": {
+      "AcceptProfileWhatsapp": {
+        "name": "Accept-Profile",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "default": "whatsapp"
+        },
+        "description": "Schema whatsapp"
+      },
+      "ContentProfileWhatsapp": {
+        "name": "Content-Profile",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "default": "whatsapp"
+        },
+        "description": "Schema whatsapp"
+      }
+    }
+  },
   "paths": {
-    "/plants": {
-      "get": {
-        "description": "Returns all plants from the system that the user has access to",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "The maximum number of results to return",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Plant response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
+    "/rest/v1/rpc/get_events_by_language": {
+      "post": {
+        "operationId": "getEventsByLanguage",
+        "summary": "Buscar Eventos",
+        "description": "Retorna dados do proximo evento por idioma",
+        "tags": ["RPC - Leads"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "p_language": {
+                    "type": "string",
+                    "description": "Idioma: pt-BR, en-US, es-ES",
+                    "example": "pt-BR"
                   }
                 }
               }
             }
-          },
-          "400": {
-            "description": "Unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
           }
-        }
-      },
-      "post": {
-        "description": "Creates a new plant in the store",
-        "requestBody": {
-          "description": "Plant to add to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
-          },
-          "required": true
         },
         "responses": {
           "200": {
-            "description": "plant response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Plant"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+            "description": "Dados do evento"
           }
         }
       }
     },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
+    "/rest/v1/rpc/get_lead_by_phone": {
+      "post": {
+        "operationId": "getLeadByPhone",
+        "summary": "Buscar Lead",
+        "description": "Busca lead por telefone",
+        "tags": ["RPC - Leads"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["p_phone"],
+                "properties": {
+                  "p_phone": {
+                    "type": "string",
+                    "description": "Telefone com DDI",
+                    "example": "5511999999999"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dados do lead"
+          }
+        }
+      }
+    },
+    "/rest/v1/rpc/save_event_lead": {
+      "post": {
+        "operationId": "saveEventLead",
+        "summary": "Salvar Lead",
+        "description": "Cria ou atualiza um lead",
+        "tags": ["RPC - Leads"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["p_phone"],
+                "properties": {
+                  "p_phone": {
+                    "type": "string",
+                    "example": "5511999999999"
+                  },
+                  "p_name": {
+                    "type": "string",
+                    "example": "Joao Silva"
+                  },
+                  "p_email": {
+                    "type": "string",
+                    "example": "joao@email.com"
+                  },
+                  "p_source": {
+                    "type": "string",
+                    "example": "whatsapp"
+                  },
+                  "p_evento_id": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "p_status": {
+                    "type": "string",
+                    "example": "CONFIRMADO"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lead salvo"
+          }
+        }
+      }
+    },
+    "/rest/v1/rpc/block_reminders_by_phone": {
+      "post": {
+        "operationId": "blockRemindersByPhone",
+        "summary": "Bloquear Lembretes",
+        "description": "Bloqueia lembretes para um lead",
+        "tags": ["RPC - Leads"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["p_phone"],
+                "properties": {
+                  "p_phone": {
+                    "type": "string",
+                    "example": "5511999999999"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lembretes bloqueados"
+          }
+        }
+      }
+    },
+    "/rest/v1/rpc/pause_session_by_phone": {
+      "post": {
+        "operationId": "pauseSessionByPhone",
+        "summary": "Pausar Sessao",
+        "description": "Pausa sessao para transferir para humano",
+        "tags": ["RPC - Sessions"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["p_phone", "p_owner_phone"],
+                "properties": {
+                  "p_phone": {
+                    "type": "string",
+                    "example": "5511999999999"
+                  },
+                  "p_owner_phone": {
+                    "type": "string",
+                    "example": "5511888888888"
+                  },
+                  "p_hours": {
+                    "type": "integer",
+                    "example": 2,
+                    "default": 2
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sessao pausada"
+          }
+        }
+      }
+    },
+    "/rest/v1/rpc/get_session_context_by_phone": {
+      "post": {
+        "operationId": "getSessionContextByPhone",
+        "summary": "Buscar Sessao",
+        "description": "Retorna contexto da sessao ativa",
+        "tags": ["RPC - Sessions"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["p_phone", "p_owner_phone"],
+                "properties": {
+                  "p_phone": {
+                    "type": "string",
+                    "example": "5511999999999"
+                  },
+                  "p_owner_phone": {
+                    "type": "string",
+                    "example": "5511888888888"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contexto da sessao"
+          }
+        }
+      }
+    },
+    "/rest/v1/rpc/validate_leads_for_event": {
+      "post": {
+        "operationId": "validateLeadsForEvent",
+        "summary": "Validar Leads",
+        "description": "Valida leads confirmados para evento",
+        "tags": ["RPC - Sessions"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["p_event_id"],
+                "properties": {
+                  "p_event_id": {
+                    "type": "integer",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lista de leads validados"
+          }
+        }
+      }
+    },
+    "/rest/v1/rpc/block_contact_by_phone": {
+      "post": {
+        "operationId": "blockContactByPhone",
+        "summary": "Bloquear Contato",
+        "description": "Bloqueia contato de receber campanhas",
+        "tags": ["RPC - Campanhas"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["p_phone", "p_owner_phone"],
+                "properties": {
+                  "p_phone": {
+                    "type": "string",
+                    "example": "5511999999999"
+                  },
+                  "p_owner_phone": {
+                    "type": "string",
+                    "example": "5511888888888"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contato bloqueado"
+          }
+        }
+      }
+    },
+    "/rest/v1/rpc/get_oauth_token": {
+      "post": {
+        "operationId": "getOauthToken",
+        "summary": "Buscar Token OAuth",
+        "description": "Retorna token OAuth do Google Calendar por email",
+        "tags": ["RPC - OAuth/Calendar"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["p_email"],
+                "properties": {
+                  "p_email": {
+                    "type": "string",
+                    "example": "usuario@gmail.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token OAuth"
+          }
+        }
+      }
+    },
+    "/rest/v1/rpc/update_oauth_token": {
+      "post": {
+        "operationId": "updateOauthToken",
+        "summary": "Atualizar Token OAuth",
+        "description": "Atualiza access_token apos refresh",
+        "tags": ["RPC - OAuth/Calendar"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["p_email", "p_access_token", "p_expires_in"],
+                "properties": {
+                  "p_email": {
+                    "type": "string",
+                    "example": "usuario@gmail.com"
+                  },
+                  "p_access_token": {
+                    "type": "string",
+                    "example": "ya29.novo_token..."
+                  },
+                  "p_expires_in": {
+                    "type": "integer",
+                    "example": 3600
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token atualizado"
+          }
+        }
+      }
+    },
+    "/rest/v1/rpc/upsert_oauth_token": {
+      "post": {
+        "operationId": "upsertOauthToken",
+        "summary": "Criar/Atualizar Token OAuth",
+        "description": "Insere ou atualiza token OAuth completo",
+        "tags": ["RPC - OAuth/Calendar"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["p_email", "p_access_token", "p_refresh_token"],
+                "properties": {
+                  "p_email": {
+                    "type": "string",
+                    "example": "usuario@gmail.com"
+                  },
+                  "p_access_token": {
+                    "type": "string",
+                    "example": "ya29.a0AfH6SMBx..."
+                  },
+                  "p_refresh_token": {
+                    "type": "string",
+                    "example": "1//0eXy..."
+                  },
+                  "p_token_type": {
+                    "type": "string",
+                    "example": "Bearer"
+                  },
+                  "p_scope": {
+                    "type": "string",
+                    "example": "https://www.googleapis.com/auth/calendar"
+                  },
+                  "p_expires_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2026-01-17T20:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token salvo"
+          }
+        }
+      }
+    },
+    "/rest/v1/rpc/save_calendar_event": {
+      "post": {
+        "operationId": "saveCalendarEvent",
+        "summary": "Salvar Evento Calendar",
+        "description": "Registra que evento foi criado no Google Calendar",
+        "tags": ["RPC - OAuth/Calendar"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["p_phone_number", "p_event_created"],
+                "properties": {
+                  "p_phone_number": {
+                    "type": "string",
+                    "example": "5511999999999"
+                  },
+                  "p_lead_email": {
+                    "type": "string",
+                    "example": "lead@email.com"
+                  },
+                  "p_event_created": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "p_event_date": {
+                    "type": "string",
+                    "example": "2026-01-20T10:00:00-03:00"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento salvo"
+          }
+        }
+      }
+    },
+    "/rest/v1/sessions": {
+      "get": {
+        "operationId": "listSessions",
+        "summary": "Listar Sessoes",
+        "description": "Lista sessoes do WhatsApp",
+        "tags": ["Tables - whatsapp"],
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
-            "description": "ID of plant to delete",
-            "required": true,
+            "$ref": "#/components/parameters/AcceptProfileWhatsapp"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "eq.OPEN"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "example": 10
             }
           }
         ],
-        "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
-          },
-          "400": {
-            "description": "unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "webhooks": {
-    "/plant/webhook": {
-      "post": {
-        "description": "Information about a new plant added to the store",
-        "requestBody": {
-          "description": "Plant added to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
-          },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
-          }
-        }
-      },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
-          },
-          {
-            "required": [
-              "id"
-            ],
-            "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
-              }
-            }
-          }
-        ]
-      },
-      "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "message": {
-            "type": "string"
+            "description": "Lista de sessoes"
           }
         }
       }
     },
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
+    "/rest/v1/contacts": {
+      "get": {
+        "operationId": "listContacts",
+        "summary": "Listar Contatos",
+        "description": "Lista contatos do WhatsApp",
+        "tags": ["Tables - whatsapp"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/AcceptProfileWhatsapp"
+          },
+          {
+            "name": "phone_number",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "eq.5511999999999"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de contatos"
+          }
+        }
+      }
+    },
+    "/rest/v1/messages": {
+      "get": {
+        "operationId": "listMessages",
+        "summary": "Listar Mensagens",
+        "description": "Lista mensagens de uma sessao",
+        "tags": ["Tables - whatsapp"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/AcceptProfileWhatsapp"
+          },
+          {
+            "name": "session_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "eq.uuid-here"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "created_at.asc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de mensagens"
+          }
+        }
+      }
+    },
+    "/rest/v1/organizations": {
+      "get": {
+        "operationId": "listOrganizations",
+        "summary": "Listar Organizacoes",
+        "description": "Lista organizacoes cadastradas",
+        "tags": ["Tables - whatsapp"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/AcceptProfileWhatsapp"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "eq.MinhaEmpresa"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de organizacoes"
+          }
+        }
+      }
+    },
+    "/rest/v1/tb_eventos": {
+      "get": {
+        "operationId": "listEvents",
+        "summary": "Listar Eventos",
+        "description": "Lista eventos cadastrados",
+        "tags": ["Tables - public"],
+        "parameters": [
+          {
+            "name": "ativo",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "eq.true"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de eventos"
+          }
+        }
       }
     }
   }
