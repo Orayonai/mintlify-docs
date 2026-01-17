@@ -25,18 +25,114 @@ Esta e a documentacao tecnica da **Orayon AI** - plataforma de automacao de aten
 
 ## Arquitetura
 
+<Frame>
+```mermaid
+flowchart TB
+    subgraph ENTRADA["📱 Entrada"]
+        WA[("WhatsApp\nBusiness")]
+        META["META Cloud API"]
+        EVOL["Evolution API"]
+    end
+
+    subgraph N8N["⚡ N8N Workflow"]
+        WH["Webhook"]
+        EXT["Extrair Dados"]
+        CFG["Config"]
+    end
+
+    subgraph SUPABASE["🗄️ Supabase"]
+        EDGE["Edge Function\nprocess-message"]
+
+        subgraph STEPS["Steps"]
+            S1["1. Organization"]
+            S2["2. Contact"]
+            S3["3. Session"]
+            S4["4. Message"]
+        end
+
+        subgraph TABLES["Tables"]
+            TB1[("organizations")]
+            TB2[("contacts")]
+            TB3[("sessions")]
+            TB4[("messages")]
+        end
+
+        RPC["RPC Functions"]
+        CRON["pg_cron Jobs"]
+    end
+
+    subgraph EXTERNAL["🔌 Servicos Externos"]
+        REDIS[("Redis/Upstash\nBuffer")]
+        OPENAI["OpenAI\nWhisper + Vision"]
+    end
+
+    subgraph AI["🤖 Agente IA"]
+        AGENT["LangChain Agent"]
+        TOOLS["Agent Tools"]
+        MEM["Memory"]
+    end
+
+    WA --> META
+    WA --> EVOL
+    META --> WH
+    EVOL --> WH
+    WH --> EXT
+    CFG --> EXT
+    EXT --> EDGE
+
+    EDGE --> S1 --> S2 --> S3 --> S4
+    S1 --> TB1
+    S2 --> TB2
+    S3 --> TB3
+    S4 --> TB4
+
+    EDGE <--> REDIS
+    EDGE <--> OPENAI
+    EDGE --> AGENT
+
+    AGENT --> TOOLS
+    TOOLS --> RPC
+    AGENT <--> MEM
+    MEM <--> REDIS
+
+    CRON --> TB3
+    CRON --> TB4
+
+    style ENTRADA fill:#1a1a2e,stroke:#9b51e0,color:#fff
+    style N8N fill:#1a1a2e,stroke:#0693e3,color:#fff
+    style SUPABASE fill:#1a1a2e,stroke:#3ecf8e,color:#fff
+    style EXTERNAL fill:#1a1a2e,stroke:#ff6900,color:#fff
+    style AI fill:#1a1a2e,stroke:#9b51e0,color:#fff
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  WhatsApp   │────▶│    N8N      │────▶│  Supabase   │
-│  (Webhook)  │     │  Workflow   │     │  Edge Fn    │
-└─────────────┘     └─────────────┘     └─────────────┘
-                          │                    │
-                          ▼                    ▼
-                    ┌─────────────┐     ┌─────────────┐
-                    │   Redis     │     │   OpenAI    │
-                    │   Buffer    │     │   Whisper   │
-                    └─────────────┘     └─────────────┘
-```
+</Frame>
+
+---
+
+## Fluxo de Mensagem
+
+<Steps>
+  <Step title="Recebimento">
+    WhatsApp envia webhook para N8N (META ou Evolution API)
+  </Step>
+  <Step title="Normalizacao">
+    N8N extrai e normaliza dados no formato padrao
+  </Step>
+  <Step title="Processamento">
+    Edge Function processa: Organization → Contact → Session → Message
+  </Step>
+  <Step title="Buffer">
+    Redis agrupa mensagens consecutivas (7 segundos)
+  </Step>
+  <Step title="Transcricao">
+    OpenAI Whisper transcreve audios para texto
+  </Step>
+  <Step title="Agente IA">
+    LangChain processa e gera resposta inteligente
+  </Step>
+  <Step title="Resposta">
+    Mensagem enviada de volta ao WhatsApp
+  </Step>
+</Steps>
 
 ---
 
@@ -51,6 +147,25 @@ Esta e a documentacao tecnica da **Orayon AI** - plataforma de automacao de aten
   </Card>
   <Card title="Crons" icon="clock" href="/api-reference/crons/overview">
     Jobs agendados (pg_cron)
+  </Card>
+</CardGroup>
+
+---
+
+## Stack Tecnologico
+
+<CardGroup cols={4}>
+  <Card title="Supabase" icon="database">
+    PostgreSQL + Edge Functions
+  </Card>
+  <Card title="N8N" icon="diagram-project">
+    Workflow Automation
+  </Card>
+  <Card title="Redis" icon="bolt">
+    Buffer + Cache
+  </Card>
+  <Card title="OpenAI" icon="brain">
+    Whisper + GPT-4
   </Card>
 </CardGroup>
 
