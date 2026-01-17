@@ -6,8 +6,8 @@
   "api": {
     "baseUrl": "https://tkrjfifrwttikwsghuju.supabase.co",
     "auth": {
-      "method": "bearer",
-      "name": "Authorization"
+      "method": "key",
+      "name": "apikey"
     },
     "playground": {
       "mode": "show"
