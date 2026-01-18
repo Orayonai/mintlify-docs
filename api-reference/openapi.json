@@ -324,6 +324,100 @@
         }
       }
     },
+    "/rest/v1/rpc/block_lead_reminders_by_phone": {
+      "post": {
+        "operationId": "blockLeadRemindersByPhone",
+        "summary": "Gerenciar Lembretes",
+        "description": "Bloqueia ou desbloqueia disparos de lembrete para um lead",
+        "tags": ["RPC - Leads"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["p_phone"],
+                "properties": {
+                  "p_phone": {
+                    "type": "string",
+                    "example": "5511999999999"
+                  },
+                  "p_block": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lembretes atualizados"
+          }
+        }
+      }
+    },
+    "/rest/v1/rpc/get_or_create_session_with_last_message": {
+      "post": {
+        "operationId": "getOrCreateSessionWithLastMessage",
+        "summary": "Buscar Sessao",
+        "description": "Busca ou cria sessao para um contato com ultima mensagem",
+        "tags": ["RPC - Sessions"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["p_phone", "p_owner_phone"],
+                "properties": {
+                  "p_phone": {
+                    "type": "string",
+                    "example": "5511999999999"
+                  },
+                  "p_owner_phone": {
+                    "type": "string",
+                    "example": "5511888888888"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sessao com ultima mensagem"
+          }
+        }
+      }
+    },
+    "/rest/v1/rpc/get_leads_with_active_window": {
+      "post": {
+        "operationId": "getLeadsWithActiveWindow",
+        "summary": "Validar Leads",
+        "description": "Busca leads com janela de 24h ativa para disparos",
+        "tags": ["RPC - Sessions"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "p_owner_phone": {
+                    "type": "string",
+                    "example": "5511888888888"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lista de leads com janela ativa"
+          }
+        }
+      }
+    },
     "/rest/v1/rpc/get_oauth_token": {
       "post": {
         "operationId": "getOauthToken",
