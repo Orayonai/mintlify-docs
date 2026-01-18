@@ -70,16 +70,14 @@
             "pages": [
               "api-reference/rpc/get-lead",
               "api-reference/rpc/save-lead",
-              "api-reference/rpc/get-events",
-              "api-reference/rpc/block-reminders"
+              "api-reference/rpc/get-events"
             ]
           },
           {
             "group": "Agent Tools - Sessions",
             "pages": [
               "api-reference/rpc/pause-session",
-              "api-reference/rpc/get-session",
-              "api-reference/rpc/validate-leads"
+              "api-reference/rpc/get-session"
             ]
           },
           {

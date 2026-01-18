@@ -1,17 +1,17 @@
 ---
 title: 'Buscar Sessao'
-openapi: 'POST /rest/v1/rpc/get_or_create_session_with_last_message'
-description: 'Busca ou cria sessao para um contato'
+openapi: 'POST /rest/v1/rpc/get_session_context_by_phone'
+description: 'Retorna contexto da sessao ativa por telefone'
 ---
 
 ## Objetivo
 
-Obter a sessao ativa de um contato ou criar uma nova se nao existir. Retorna tambem a ultima mensagem da sessao.
+Obter o contexto da sessao ativa de um contato pelo telefone.
 
 ## Endpoint
 
 ```
-POST {SUPABASE_URL}/rest/v1/rpc/get_or_create_session_with_last_message
+POST {SUPABASE_URL}/rest/v1/rpc/get_session_context_by_phone
 ```
 
 ## Headers
@@ -24,23 +24,18 @@ Content-Type: application/json
 
 ## Request Body
 
-<ParamField body="p_phone_number" type="string" required>
+<ParamField body="p_phone" type="string" required>
   Telefone do contato
 </ParamField>
 
-<ParamField body="p_chatwoot_conversation_id" type="string">
-  ID da conversa no Chatwoot (opcional)
-</ParamField>
-
-<ParamField body="p_contact_name" type="string">
-  Nome do contato (opcional)
+<ParamField body="p_owner_phone" type="string" required>
+  Telefone do WhatsApp Business
 </ParamField>
 
 ```json
 {
-  "p_phone_number": "+5511999999999",
-  "p_chatwoot_conversation_id": "12345",
-  "p_contact_name": "Joao Silva"
+  "p_phone": "5511999999999",
+  "p_owner_phone": "5511888888888"
 }
 ```
 
@@ -71,25 +66,12 @@ Content-Type: application/json
 ## Exemplo cURL
 
 ```bash
-curl -X POST '{SUPABASE_URL}/rest/v1/rpc/get_or_create_session_with_last_message' \
+curl -X POST '{SUPABASE_URL}/rest/v1/rpc/get_session_context_by_phone' \
   -H 'apikey: SUA_ANON_KEY' \
   -H 'Authorization: Bearer SUA_SERVICE_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
-    "p_phone_number": "+5511999999999"
+    "p_phone": "5511999999999",
+    "p_owner_phone": "5511888888888"
   }'
-```
-
-## Funcao Alternativa
-
-Para apenas buscar por telefone sem criar:
-
-```
-POST /rest/v1/rpc/get_or_create_session_by_phone
-```
-
-```json
-{
-  "p_phone_number": "+5511999999999"
-}
 ```

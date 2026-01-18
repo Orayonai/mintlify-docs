@@ -66,7 +66,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "p_language": {
+                  "p_idioma": {
                     "type": "string",
                     "description": "Idioma: pt-BR, en-US, es-ES",
                     "example": "pt-BR"
@@ -94,9 +94,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["p_phone"],
+                "required": ["p_phone_number"],
                 "properties": {
-                  "p_phone": {
+                  "p_phone_number": {
                     "type": "string",
                     "description": "Telefone com DDI",
                     "example": "5511999999999"
@@ -117,38 +117,66 @@
       "post": {
         "operationId": "saveEventLead",
         "summary": "Salvar Lead",
-        "description": "Cria ou atualiza um lead",
+        "description": "Cria ou atualiza um lead de evento",
         "tags": ["RPC - Leads"],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["p_phone"],
+                "required": ["p_contact_id", "p_name", "p_phone_number", "p_confirmed_presence"],
                 "properties": {
-                  "p_phone": {
+                  "p_contact_id": {
                     "type": "string",
-                    "example": "5511999999999"
+                    "format": "uuid",
+                    "description": "ID do contato no sistema",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                   },
                   "p_name": {
                     "type": "string",
-                    "example": "Joao Silva"
+                    "description": "Nome do lead",
+                    "example": "Maria Santos"
+                  },
+                  "p_phone_number": {
+                    "type": "string",
+                    "description": "Telefone formato internacional",
+                    "example": "+5511888888888"
+                  },
+                  "p_confirmed_presence": {
+                    "type": "boolean",
+                    "description": "true se confirmou, false se recusou",
+                    "example": true
                   },
                   "p_email": {
                     "type": "string",
-                    "example": "joao@email.com"
+                    "description": "Email do lead (opcional)",
+                    "example": "maria@email.com"
                   },
-                  "p_source": {
+                  "p_interested_future_events": {
+                    "type": "boolean",
+                    "description": "Interesse em eventos futuros",
+                    "example": false
+                  },
+                  "p_language": {
                     "type": "string",
-                    "example": "whatsapp"
+                    "description": "Idioma: pt-BR, en-US, es-ES",
+                    "example": "pt-BR"
+                  },
+                  "p_invited_by": {
+                    "type": "string",
+                    "description": "Nome de quem convidou",
+                    "example": "Joao Silva"
                   },
                   "p_evento_id": {
                     "type": "integer",
+                    "description": "ID do evento",
                     "example": 1
                   },
-                  "p_status": {
+                  "p_session_id": {
                     "type": "string",
-                    "example": "CONFIRMADO"
+                    "format": "uuid",
+                    "description": "ID da sessao atual",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
                   }
                 }
               }
@@ -158,35 +186,6 @@
         "responses": {
           "200": {
             "description": "Lead salvo"
-          }
-        }
-      }
-    },
-    "/rest/v1/rpc/block_reminders_by_phone": {
-      "post": {
-        "operationId": "blockRemindersByPhone",
-        "summary": "Bloquear Lembretes",
-        "description": "Bloqueia lembretes para um lead",
-        "tags": ["RPC - Leads"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["p_phone"],
-                "properties": {
-                  "p_phone": {
-                    "type": "string",
-                    "example": "5511999999999"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Lembretes bloqueados"
           }
         }
       }
@@ -202,20 +201,22 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["p_phone", "p_owner_phone"],
+                "required": ["p_phone_number", "p_hours", "p_owner_phone"],
                 "properties": {
-                  "p_phone": {
+                  "p_phone_number": {
                     "type": "string",
-                    "example": "5511999999999"
-                  },
-                  "p_owner_phone": {
-                    "type": "string",
-                    "example": "5511888888888"
+                    "description": "Telefone do cliente",
+                    "example": "+5511999999999"
                   },
                   "p_hours": {
                     "type": "integer",
-                    "example": 2,
-                    "default": 2
+                    "description": "Horas para pausar (1-72)",
+                    "example": 2
+                  },
+                  "p_owner_phone": {
+                    "type": "string",
+                    "description": "Telefone do WhatsApp Business",
+                    "example": "554147414147"
                   }
                 }
               }
@@ -262,74 +263,12 @@
         }
       }
     },
-    "/rest/v1/rpc/validate_leads_for_event": {
+    "/rest/v1/rpc/block_contact": {
       "post": {
-        "operationId": "validateLeadsForEvent",
-        "summary": "Validar Leads",
-        "description": "Valida leads confirmados para evento",
-        "tags": ["RPC - Sessions"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["p_event_id"],
-                "properties": {
-                  "p_event_id": {
-                    "type": "integer",
-                    "example": 1
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Lista de leads validados"
-          }
-        }
-      }
-    },
-    "/rest/v1/rpc/block_contact_by_phone": {
-      "post": {
-        "operationId": "blockContactByPhone",
+        "operationId": "blockContact",
         "summary": "Bloquear Contato",
-        "description": "Bloqueia contato de receber campanhas",
+        "description": "Bloqueia contato de receber campanhas de marketing",
         "tags": ["RPC - Campanhas"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["p_phone", "p_owner_phone"],
-                "properties": {
-                  "p_phone": {
-                    "type": "string",
-                    "example": "5511999999999"
-                  },
-                  "p_owner_phone": {
-                    "type": "string",
-                    "example": "5511888888888"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Contato bloqueado"
-          }
-        }
-      }
-    },
-    "/rest/v1/rpc/block_lead_reminders_by_phone": {
-      "post": {
-        "operationId": "blockLeadRemindersByPhone",
-        "summary": "Gerenciar Lembretes",
-        "description": "Bloqueia ou desbloqueia disparos de lembrete para um lead",
-        "tags": ["RPC - Leads"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -339,10 +278,12 @@
                 "properties": {
                   "p_phone": {
                     "type": "string",
+                    "description": "Telefone do contato",
                     "example": "5511999999999"
                   },
-                  "p_block": {
+                  "p_blocked": {
                     "type": "boolean",
+                    "description": "true = bloquear, false = desbloquear",
                     "example": true
                   }
                 }
@@ -352,68 +293,7 @@
         },
         "responses": {
           "200": {
-            "description": "Lembretes atualizados"
-          }
-        }
-      }
-    },
-    "/rest/v1/rpc/get_or_create_session_with_last_message": {
-      "post": {
-        "operationId": "getOrCreateSessionWithLastMessage",
-        "summary": "Buscar Sessao",
-        "description": "Busca ou cria sessao para um contato com ultima mensagem",
-        "tags": ["RPC - Sessions"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["p_phone", "p_owner_phone"],
-                "properties": {
-                  "p_phone": {
-                    "type": "string",
-                    "example": "5511999999999"
-                  },
-                  "p_owner_phone": {
-                    "type": "string",
-                    "example": "5511888888888"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Sessao com ultima mensagem"
-          }
-        }
-      }
-    },
-    "/rest/v1/rpc/get_leads_with_active_window": {
-      "post": {
-        "operationId": "getLeadsWithActiveWindow",
-        "summary": "Validar Leads",
-        "description": "Busca leads com janela de 24h ativa para disparos",
-        "tags": ["RPC - Sessions"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "p_owner_phone": {
-                    "type": "string",
-                    "example": "5511888888888"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Lista de leads com janela ativa"
+            "description": "Contato bloqueado/desbloqueado"
           }
         }
       }
@@ -588,6 +468,7 @@
           {
             "name": "status",
             "in": "query",
+            "description": "Filtro por status. Use operador: eq.VALOR (ex: eq.OPEN, eq.CLOSED)",
             "schema": {
               "type": "string",
               "example": "eq.OPEN"
@@ -622,6 +503,7 @@
           {
             "name": "phone_number",
             "in": "query",
+            "description": "Filtro por telefone. Use operador: eq.VALOR (ex: eq.5511999999999)",
             "schema": {
               "type": "string",
               "example": "eq.5511999999999"
@@ -648,6 +530,7 @@
           {
             "name": "session_id",
             "in": "query",
+            "description": "Filtro por session_id. Use operador: eq.VALOR (ex: eq.uuid-aqui)",
             "schema": {
               "type": "string",
               "example": "eq.uuid-here"
@@ -682,6 +565,7 @@
           {
             "name": "name",
             "in": "query",
+            "description": "Filtro por nome. Use operador: eq.VALOR (ex: eq.MinhaEmpresa)",
             "schema": {
               "type": "string",
               "example": "eq.MinhaEmpresa"
@@ -705,6 +589,7 @@
           {
             "name": "ativo",
             "in": "query",
+            "description": "Filtro por status ativo. Use operador: eq.VALOR (ex: eq.true, eq.false)",
             "schema": {
               "type": "string",
               "example": "eq.true"
