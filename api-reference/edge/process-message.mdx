@@ -276,3 +276,48 @@ GET {SUPABASE_URL}/functions/v1/process-message
   }
 }
 ```
+
+---
+
+## Instagram DM
+
+Para mensagens do Instagram via ChatWoot:
+
+| Campo | Valor |
+|-------|-------|
+| `channel_type` | `"INSTAGRAM"` |
+| `webhook_format` | `"CHATWOOT"` |
+| `contact_identifier` | Instagram User ID (ex: `"instagram_12345"`) |
+| `phone_number` | Pode ser vazio ou ID do Instagram |
+| `external_id` | Instagram User ID |
+
+### Exemplo Request Instagram
+
+```json
+{
+  "organization_name": "MinhaEmpresa",
+  "business_phone": "instagram_page_id",
+  "channel_type": "INSTAGRAM",
+  "webhook_format": "CHATWOOT",
+
+  "phone_number": "instagram_dm",
+  "contact_identifier": "instagram_12345678",
+  "contact_name": "Usuario Instagram",
+  "external_id": "instagram_12345678",
+
+  "message_type": "TEXT",
+  "message_text": "Ola via Instagram!",
+  "direction": "IN",
+  "author": "CUSTOMER",
+  "message_id": "ig_msg_xxx",
+
+  "chatwoot_account_id": 1,
+  "chatwoot_conversation_id": 54321,
+  "chatwoot_url": "https://chat.orayon.com.br",
+  "chatwoot_api_key": "xxx"
+}
+```
+
+<Info>
+  **Instagram via ChatWoot:** O ChatWoot conecta com Instagram via Meta Graph API. As mensagens chegam como webhooks do ChatWoot, nao diretamente da Meta.
+</Info>

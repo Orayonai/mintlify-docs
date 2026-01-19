@@ -72,20 +72,26 @@ Content-Type: application/json
 
 Configuracoes do canal de envio:
 
+| Tipo | Uso | Descricao |
+|------|-----|-----------|
+| `OFICIAL` | WhatsApp META Cloud API | API oficial da Meta |
+| `UAZAPI` | WhatsApp nao-oficial | Via UAZAPI |
+| `CHATWOOT` | Instagram DM / WhatsApp | Via ChatWoot |
+
 ```json
 {
   "channel": {
     "type": "OFICIAL",              // OFICIAL, UAZAPI, CHATWOOT
 
-    // UAZAPI
+    // UAZAPI (WhatsApp nao-oficial)
     "uazapi_base_url": "",
     "uazapi_token": "",
 
-    // META Cloud API
+    // META Cloud API (WhatsApp oficial)
     "phone_number_id": "",
     "access_token": "",
 
-    // ChatWoot
+    // ChatWoot (Instagram DM / WhatsApp)
     "chatwoot_url": "",
     "chatwoot_token": "",
     "account_id": 1,
@@ -94,6 +100,10 @@ Configuracoes do canal de envio:
   }
 }
 ```
+
+<Info>
+  **Instagram DM:** Para Instagram, use `channel.type = "CHATWOOT"`. O ChatWoot gerencia a conexao com Instagram via Meta API.
+</Info>
 
 ### Objeto audio (TTS)
 
