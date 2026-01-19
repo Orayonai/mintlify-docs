@@ -1,0 +1,347 @@
+---
+title: 'Process Callback'
+description: 'Edge Function para processar resposta do agente e enviar mensagens'
+---
+
+## Visao Geral
+
+A Edge Function `process-callback` recebe a resposta do agente N8N, processa (TTS, split, delays) e envia as mensagens para o cliente via WhatsApp/Instagram.
+
+## Endpoint
+
+```
+POST {SUPABASE_URL}/functions/v1/process-callback
+```
+
+## Headers
+
+```bash
+Authorization: Bearer SUA_ANON_KEY
+Content-Type: application/json
+```
+
+---
+
+## Request Body Completo
+
+### Campos do Agente
+
+| Campo | Tipo | Obrigatorio | Descricao |
+|-------|------|-------------|-----------|
+| `output` | string | Sim | Resposta do agente para enviar |
+| `ai_model` | string | Nao | Modelo usado (ex: gpt-4o) |
+| `system_prompt` | string | Nao | System prompt usado |
+| `user_message` | string | Nao | Mensagem original do usuario |
+| `chat_history` | array | Nao | Historico da conversa |
+| `intermediateSteps` | array | Nao | Steps intermediarios do agente |
+
+### Campos de Identificacao
+
+| Campo | Tipo | Obrigatorio | Descricao |
+|-------|------|-------------|-----------|
+| `message_id` | string | Sim | ID da mensagem original |
+| `session_id` | string | Sim | ID da sessao |
+| `contact_id` | string | Sim | ID do contato |
+| `sender` | string | Sim | Telefone/ID do remetente |
+| `contact_name` | string | Nao | Nome do contato |
+
+### Campos do Agente N8N
+
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `agent_id` | string | ID do agente |
+| `agent_name` | string | Nome do agente |
+
+### Objeto input_media
+
+```json
+{
+  "input_media": {
+    "type": "TEXT",           // TEXT, AUDIO, IMAGE, VIDEO
+    "url": "",                // URL da midia original
+    "base64": "",             // Base64 da midia
+    "mimetype": "",           // Tipo MIME
+    "duration": 0,            // Duracao em segundos (audio/video)
+    "size": 0,                // Tamanho em bytes
+    "transcription": ""       // Transcricao (se audio)
+  }
+}
+```
+
+### Objeto channel
+
+Configuracoes do canal de envio:
+
+```json
+{
+  "channel": {
+    "type": "OFICIAL",              // OFICIAL, UAZAPI, CHATWOOT
+
+    // UAZAPI
+    "uazapi_base_url": "",
+    "uazapi_token": "",
+
+    // META Cloud API
+    "phone_number_id": "",
+    "access_token": "",
+
+    // ChatWoot
+    "chatwoot_url": "",
+    "chatwoot_token": "",
+    "account_id": 1,
+    "conversation_id": null,
+    "bot_name": "AI Assistant"
+  }
+}
+```
+
+### Objeto audio (TTS)
+
+Configuracoes de Text-to-Speech:
+
+```json
+{
+  "audio": {
+    "enabled": false,                    // Habilita TTS
+    "tts_provider": "ELEVENLABS",        // Provider (ELEVENLABS)
+    "output_format": "wav",              // Formato de saida
+    "elevenlabs_api_key": "",            // API Key ElevenLabs
+    "voice_id": "pNInz6obpgDQGcFmaJgB", // ID da voz
+    "model_id": "eleven_multilingual_v2" // Modelo TTS
+  }
+}
+```
+
+### Objeto split
+
+Configuracoes de divisao de mensagens:
+
+```json
+{
+  "split": {
+    "enabled": true,           // Habilita split
+    "max_chars": 300,          // Max caracteres por mensagem
+    "keep_lists_together": true, // Manter listas juntas
+    "use_delay": true,         // Usar delays entre mensagens
+    "delays": {
+      "base_ms": 800,          // Delay base
+      "per_char_ms": 20,       // Delay por caractere
+      "max_ms": 4000           // Delay maximo
+    }
+  }
+}
+```
+
+### Objeto save_message
+
+```json
+{
+  "save_message": {
+    "enabled": true    // Salvar mensagem no banco
+  }
+}
+```
+
+### Objeto flags
+
+```json
+{
+  "flags": {
+    "save_costs": true,   // Salvar custos de tokens
+    "skip_empty": true    // Pular mensagens vazias
+  }
+}
+```
+
+### Campos Supabase
+
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `supabase_url` | string | URL do Supabase |
+| `supabase_service_key` | string | Service Key |
+
+---
+
+## Exemplo Request Completo
+
+```json
+{
+  "output": "Ola! Como posso ajudar?",
+  "ai_model": "gpt-4o",
+  "system_prompt": "Voce e um assistente...",
+  "user_message": "Oi",
+  "chat_history": [],
+  "intermediateSteps": [],
+
+  "message_id": "uuid-message",
+  "session_id": "uuid-session",
+  "contact_id": "uuid-contact",
+  "sender": "5511999999999",
+  "contact_name": "Joao",
+
+  "agent_id": "agent-123",
+  "agent_name": "Assistente Virtual",
+
+  "input_media": {
+    "type": "TEXT",
+    "url": "",
+    "base64": "",
+    "mimetype": "",
+    "duration": 0,
+    "size": 0,
+    "transcription": ""
+  },
+
+  "channel": {
+    "type": "OFICIAL",
+    "uazapi_base_url": "",
+    "uazapi_token": "",
+    "phone_number_id": "123456789",
+    "access_token": "EAAxx...",
+    "chatwoot_url": "",
+    "chatwoot_token": "",
+    "account_id": 1,
+    "conversation_id": null,
+    "bot_name": "AI Assistant"
+  },
+
+  "audio": {
+    "enabled": false,
+    "tts_provider": "ELEVENLABS",
+    "output_format": "wav",
+    "elevenlabs_api_key": "",
+    "voice_id": "pNInz6obpgDQGcFmaJgB",
+    "model_id": "eleven_multilingual_v2"
+  },
+
+  "split": {
+    "enabled": true,
+    "max_chars": 300,
+    "keep_lists_together": true,
+    "use_delay": true,
+    "delays": {
+      "base_ms": 800,
+      "per_char_ms": 20,
+      "max_ms": 4000
+    }
+  },
+
+  "save_message": {
+    "enabled": true
+  },
+
+  "flags": {
+    "save_costs": true,
+    "skip_empty": true
+  },
+
+  "supabase_url": "https://xxx.supabase.co",
+  "supabase_service_key": "eyJxxx..."
+}
+```
+
+---
+
+## Response Sucesso
+
+```json
+{
+  "success": true,
+  "messages_sent": 2,
+  "audio_generated": false,
+  "processing_time_ms": 1200
+}
+```
+
+---
+
+## Fluxo de Processamento
+
+```
+1. Recebe output do agente
+2. Se audio.enabled = true:
+   - Gera audio via ElevenLabs
+   - Envia como mensagem de audio
+3. Se split.enabled = true:
+   - Divide mensagem em partes
+   - Aplica delays entre envios
+4. Envia via canal configurado (META/UAZAPI/ChatWoot)
+5. Salva mensagem no banco (se enabled)
+6. Salva custos de tokens (se enabled)
+```
+
+---
+
+## Exemplo N8N Tool
+
+```json
+{
+  "name": "process-callback",
+  "method": "POST",
+  "url": "={{ $('Config').item.json.SUPABASE_URL }}/functions/v1/process-callback",
+  "headers": {
+    "Authorization": "Bearer {{ $('Config').item.json.SUPABASE_ANON_KEY }}"
+  }
+}
+```
+
+---
+
+## Configuracao de Audio (TTS)
+
+### Quando Habilitar
+
+O TTS e habilitado automaticamente quando a mensagem de entrada e audio:
+
+```javascript
+"audio": {
+  "enabled": {{ $('Extrair Dados').item.json.message_type === 'AUDIO' }}
+}
+```
+
+### Vozes ElevenLabs Disponiveis
+
+| Voice ID | Nome | Idioma |
+|----------|------|--------|
+| `pNInz6obpgDQGcFmaJgB` | Adam | Multilingual |
+| `21m00Tcm4TlvDq8ikWAM` | Rachel | Multilingual |
+| `AZnzlk1XvdvUeBnXmlld` | Domi | Multilingual |
+
+---
+
+## Split de Mensagens
+
+### Por que usar Split?
+
+- WhatsApp tem limite de 4096 caracteres
+- Mensagens menores tem melhor leitura
+- Delays simulam digitacao humana
+- Listas e formatacao sao preservadas
+
+### Exemplo de Split
+
+**Input (500 chars):**
+```
+Ola! Tenho algumas informacoes importantes para voce:
+
+1. Primeiro ponto muito importante
+2. Segundo ponto tambem relevante
+3. Terceiro ponto para considerar
+
+Espero que isso ajude!
+```
+
+**Output (2 mensagens):**
+```
+Mensagem 1: "Ola! Tenho algumas informacoes importantes para voce:"
+[delay 1.2s]
+Mensagem 2: "1. Primeiro ponto muito importante
+2. Segundo ponto tambem relevante
+3. Terceiro ponto para considerar
+
+Espero que isso ajude!"
+```
+
+<Info>
+  `keep_lists_together: true` garante que listas numeradas nao sejam divididas no meio.
+</Info>

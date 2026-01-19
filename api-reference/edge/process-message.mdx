@@ -1,11 +1,11 @@
 ---
 title: 'Process Message'
-description: 'Edge Function para processamento de mensagens WhatsApp'
+description: 'Edge Function para processamento de mensagens WhatsApp/Instagram'
 ---
 
 ## Visao Geral
 
-A Edge Function `process-message` e o nucleo central do sistema. Recebe webhooks de diferentes fontes, normaliza dados, gerencia sessoes e processa midia.
+A Edge Function `process-message` e o nucleo central do sistema. Recebe webhooks de diferentes fontes (META, UAZAPI, ChatWoot), normaliza dados, gerencia sessoes e processa midia.
 
 ## Endpoint
 
@@ -40,27 +40,37 @@ GET {SUPABASE_URL}/functions/v1/process-message
 
 ---
 
-## Request Body
+## Request Body Completo
 
-### Campos Obrigatorios
+### Campos de Organizacao
 
-| Campo | Tipo | Descricao |
-|-------|------|-----------|
-| `organization_name` | string | Nome da empresa |
-| `business_phone` | string | Telefone WhatsApp Business |
-| `phone_number` | string | Telefone do cliente |
-| `message_type` | string | TEXT, AUDIO, IMAGE, etc |
-| `message_text` | string | Conteudo da mensagem |
-| `direction` | string | IN ou OUT |
-| `author` | string | CUSTOMER, AGENT, AI |
-| `message_id` | string | ID unico da mensagem |
+| Campo | Tipo | Obrigatorio | Descricao |
+|-------|------|-------------|-----------|
+| `organization_name` | string | Sim | Nome da empresa |
+| `business_phone` | string | Sim | Telefone WhatsApp Business |
+| `integration_token` | string | Nao | Token de integracao |
+| `session_timeout` | integer | Nao | Timeout da sessao em horas (default: 24) |
 
-### Campos de Webhook
+### Campos do Contato
 
-| Campo | Tipo | Valores |
-|-------|------|---------|
-| `webhook_format` | string | CHATWOOT, OFICIAL, NAO_OFICIAL |
-| `underlying_api` | string | META, UAZAPI, EVOLUTION |
+| Campo | Tipo | Obrigatorio | Descricao |
+|-------|------|-------------|-----------|
+| `phone_number` | string | Sim | Telefone do cliente |
+| `contact_identifier` | string | Nao | Identificador alternativo (Instagram ID, etc) |
+| `contact_name` | string | Nao | Nome do contato (default: "Cliente") |
+| `external_id` | string | Nao | ID externo do contato |
+| `channel_type` | string | Nao | WHATSAPP ou INSTAGRAM (default: WHATSAPP) |
+
+### Campos da Mensagem
+
+| Campo | Tipo | Obrigatorio | Descricao |
+|-------|------|-------------|-----------|
+| `message_type` | string | Sim | TEXT, AUDIO, IMAGE, VIDEO, DOCUMENT |
+| `message_text` | string | Sim | Conteudo da mensagem |
+| `message_content` | object | Nao | Objeto com text e type |
+| `direction` | string | Sim | IN (entrada) ou OUT (saida) |
+| `author` | string | Sim | CUSTOMER, AGENT, AI |
+| `message_id` | string | Sim | ID unico da mensagem |
 
 ### Campos de Midia
 
@@ -68,38 +78,122 @@ GET {SUPABASE_URL}/functions/v1/process-message
 |-------|------|-----------|
 | `media_url` | string | URL da midia |
 | `media_base64` | string | Midia em base64 |
-| `media_mimetype` | string | audio/ogg, image/jpeg |
+| `media_mimetype` | string | audio/ogg, image/jpeg, etc |
 | `media_id` | string | ID Meta para download |
+
+### Campos ChatWoot
+
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `chatwoot_account_id` | integer | ID da conta ChatWoot |
+| `chatwoot_inbox_id` | integer | ID da inbox |
+| `chatwoot_conversation_id` | integer | ID da conversa |
+
+### Campos de Webhook/API
+
+| Campo | Tipo | Valores | Descricao |
+|-------|------|---------|-----------|
+| `webhook_format` | string | CHATWOOT, OFICIAL | Formato do webhook recebido |
+| `underlying_api` | string | META, UAZAPI | API subjacente |
+| `effective_api` | string | META, UAZAPI | API efetiva para envio |
 
 ### Campos de Credenciais
 
 | Campo | Tipo | Descricao |
 |-------|------|-----------|
 | `openai_api_key` | string | Para Whisper e Vision |
-| `redis_url` | string | URL do Redis |
+| `redis_url` | string | URL do Redis (Upstash) |
 | `redis_token` | string | Token Redis |
+| `buffer_timeout_seconds` | integer | Timeout do buffer (default: 7) |
+
+### Campos de Processamento de Midia
+
+| Campo | Tipo | Default | Descricao |
+|-------|------|---------|-----------|
+| `image_prompt` | string | "Analise esta imagem..." | Prompt para Vision |
+| `pdf_prompt` | string | "Extraia todo o conteudo..." | Prompt para PDF |
+| `vision_model` | string | "gpt-4o-mini" | Modelo de Vision |
+| `media_processing_enabled` | boolean | true | Habilita processamento |
+
+### Campos de Historico
+
+| Campo | Tipo | Default | Descricao |
+|-------|------|---------|-----------|
+| `include_history` | boolean | false | Incluir historico na resposta |
+| `history_sessions` | integer | 1 | Quantas sessoes incluir |
+| `history_format` | string | "formatted" | Formato do historico |
+
+### Campos de APIs Externas
+
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `uazapi_base_url` | string | URL base UAZAPI |
+| `uazapi_token` | string | Token UAZAPI |
+| `autorizacao_oficial` | string | Token META Cloud API |
+| `phone_number_id_OFICIAL` | string | Phone Number ID META |
+| `chatwoot_url` | string | URL do ChatWoot |
+| `chatwoot_api_key` | string | API Key ChatWoot |
 
 ---
 
-## Exemplo Request
+## Exemplo Request Completo
 
 ```json
 {
-  "organization_name": "IrisSecretaria",
+  "organization_name": "MinhaEmpresa",
   "business_phone": "5511999999999",
+  "integration_token": "token-123",
+  "session_timeout": 24,
+
   "phone_number": "5511888888888",
+  "contact_identifier": "5511888888888",
+  "contact_name": "Joao Silva",
+  "external_id": "5511888888888",
+  "channel_type": "WHATSAPP",
+
   "message_type": "TEXT",
   "message_text": "Ola, preciso de ajuda",
+  "message_content": {
+    "text": "Ola, preciso de ajuda",
+    "type": "TEXT"
+  },
   "direction": "IN",
   "author": "CUSTOMER",
   "message_id": "wamid.xxx",
-  "webhook_format": "CHATWOOT",
-  "underlying_api": "META",
+
+  "media_url": null,
+  "media_base64": null,
+  "media_mimetype": null,
+  "media_id": null,
+
   "chatwoot_account_id": 1,
+  "chatwoot_inbox_id": null,
   "chatwoot_conversation_id": 12345,
+
+  "webhook_format": "OFICIAL",
+  "underlying_api": "META",
+  "effective_api": "META",
+
   "openai_api_key": "sk-xxx",
   "redis_url": "https://xxx.upstash.io",
-  "redis_token": "AXxxx"
+  "redis_token": "AXxxx",
+  "buffer_timeout_seconds": 7,
+
+  "image_prompt": "Analise esta imagem. Extraia todo texto visivel.",
+  "pdf_prompt": "Extraia todo o conteudo deste documento PDF.",
+  "vision_model": "gpt-4o-mini",
+  "media_processing_enabled": true,
+
+  "include_history": false,
+  "history_sessions": 1,
+  "history_format": "formatted",
+
+  "uazapi_base_url": "",
+  "uazapi_token": "",
+  "autorizacao_oficial": "EAAxx...",
+  "phone_number_id_OFICIAL": "123456789",
+  "chatwoot_url": "https://chat.example.com",
+  "chatwoot_api_key": "xxx"
 }
 ```
 
@@ -166,3 +260,19 @@ GET {SUPABASE_URL}/functions/v1/process-message
 <Warning>
   O comando `@fechar` limpa automaticamente a memoria do agente no Redis (chave `memory:agent:{session_id}`).
 </Warning>
+
+---
+
+## Exemplo N8N Tool
+
+```json
+{
+  "name": "Edge Function",
+  "method": "POST",
+  "url": "={{ $('Config').item.json.SUPABASE_URL }}/functions/v1/process-message",
+  "headers": {
+    "Authorization": "Bearer {{ $('Config').item.json.SUPABASE_ANON_KEY }}",
+    "Content-Type": "application/json"
+  }
+}
+```

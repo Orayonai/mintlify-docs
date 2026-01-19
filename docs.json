@@ -55,6 +55,7 @@
             "group": "Edge Function",
             "pages": [
               "api-reference/edge/process-message",
+              "api-reference/edge/process-callback",
               "api-reference/edge/arquitetura",
               "api-reference/edge/step-organization",
               "api-reference/edge/step-contact",
