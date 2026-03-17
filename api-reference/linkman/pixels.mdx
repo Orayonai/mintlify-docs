@@ -1,0 +1,93 @@
+---
+title: 'Retargeting Pixels'
+description: 'Gerenciar pixels de retargeting (Facebook, Google, TikTok, LinkedIn)'
+---
+
+## Como funciona
+
+Pixels de retargeting sao injetados na pagina HTML durante deep link redirects. Quando um usuario acessa um link com deep links + pixels associados, o HTML gerado inclui os scripts de tracking de cada pixel.
+
+## Plataformas suportadas
+
+| Plataforma | Formato do pixel_id | Exemplo |
+|---|---|---|
+| `facebook` | Numerico | `123456789012345` |
+| `google` | `XX-XXXXX` | `AW-123456789` |
+| `tiktok` | Alfanumerico | `C5K2A1B3D4E5F6` |
+| `linkedin` | Numerico | `1234567` |
+
+## Criar Pixel
+
+```bash
+curl -X POST https://links.orayon.com.br/api/pixels \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "FB Pixel Campanha Q1",
+    "platform": "facebook",
+    "pixel_id": "123456789012345"
+  }'
+```
+
+### Resposta (201)
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "a1b2c3d4-...",
+    "name": "FB Pixel Campanha Q1",
+    "platform": "facebook",
+    "pixel_id": "123456789012345",
+    "is_active": true,
+    "created_at": "2026-03-17T02:30:00.000Z"
+  }
+}
+```
+
+## Listar Pixels
+
+```bash
+curl "https://links.orayon.com.br/api/pixels?page=1&limit=50" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Atualizar Pixel
+
+```bash
+curl -X PUT https://links.orayon.com.br/api/pixels \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "PIXEL_UUID",
+    "name": "Novo nome",
+    "is_active": false
+  }'
+```
+
+## Deletar Pixel
+
+```bash
+curl -X DELETE "https://links.orayon.com.br/api/pixels?id=PIXEL_UUID" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+<Warning>
+  Deletar um pixel remove permanentemente (hard delete). Links associados perdem o pixel automaticamente.
+</Warning>
+
+## Associar Pixels a um Link
+
+Use `PUT /api/links` com o campo `pixel_ids`:
+
+```bash
+curl -X PUT https://links.orayon.com.br/api/links \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "LINK_UUID",
+    "pixel_ids": ["PIXEL_UUID_1", "PIXEL_UUID_2"]
+  }'
+```
+
+Os `pixel_ids` substituem todas as associacoes anteriores. Para remover todos os pixels, envie `"pixel_ids": []`.

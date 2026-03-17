@@ -1,0 +1,63 @@
+---
+title: 'Link Manager'
+description: 'Encurtador de links com tracking, deep links e retargeting pixels'
+---
+
+## Visao Geral
+
+O **Orayon Link Manager** e um encurtador de links completo com:
+
+- **Tracking de clicks** com geo (pais, cidade, regiao), device, browser, OS
+- **Deep links** para iOS (Universal Links) e Android (Intent URLs)
+- **Retargeting pixels** (Facebook, Google, TikTok, LinkedIn)
+- **Analytics** com timeseries, breakdowns e sumarios
+- **UTM forwarding** automatico
+
+## Arquitetura
+
+```
+Browser → Cloudflare Worker (links.orayon.com.br)
+           → Supabase Edge Functions
+              → PostgreSQL (schema: linkman)
+```
+
+## Autenticacao
+
+Todas as chamadas de API requerem um `Bearer` token no header `Authorization`:
+
+```bash
+curl https://links.orayon.com.br/api/links \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Base URL
+
+```
+https://links.orayon.com.br
+```
+
+## Endpoints
+
+| Metodo | Endpoint | Descricao |
+|--------|----------|-----------|
+| `POST` | `/api/links` | Criar link |
+| `GET` | `/api/links` | Listar links |
+| `GET` | `/api/links?id=UUID` | Buscar link por ID |
+| `PUT` | `/api/links` | Atualizar link |
+| `DELETE` | `/api/links?id=UUID` | Desativar link (soft delete) |
+| `POST` | `/api/pixels` | Criar pixel |
+| `GET` | `/api/pixels` | Listar pixels |
+| `PUT` | `/api/pixels` | Atualizar pixel |
+| `DELETE` | `/api/pixels?id=UUID` | Deletar pixel |
+| `GET` | `/api/analytics?type=...` | Consultar analytics |
+| `GET` | `/{slug}` | Redirect publico |
+
+## Schema do Banco
+
+Todas as tabelas ficam no schema `linkman`, isolado do resto do projeto:
+
+- `linkman.links` - Links encurtados
+- `linkman.clicks` - Registro de clicks
+- `linkman.pixels` - Pixels de retargeting
+- `linkman.link_pixels` - Associacao link-pixel (N:N)
+- `linkman.link_deeplinks` - Deep links por plataforma

@@ -120,6 +120,16 @@
               "api-reference/crons/limpar-sessoes",
               "api-reference/crons/enviar-lembretes"
             ]
+          },
+          {
+            "group": "Link Manager",
+            "pages": [
+              "api-reference/linkman/overview",
+              "api-reference/linkman/links",
+              "api-reference/linkman/deeplinks",
+              "api-reference/linkman/pixels",
+              "api-reference/linkman/analytics"
+            ]
           }
         ]
       }

@@ -1,0 +1,88 @@
+---
+title: 'Analytics'
+description: 'Consultar metricas de clicks, conversoes e performance dos links'
+---
+
+## Tipos de consulta
+
+| Tipo | Descricao |
+|------|-----------|
+| `global` | Sumario de todos os links |
+| `summary` | Sumario de um link especifico |
+| `timeseries` | Clicks ao longo do tempo |
+| `breakdown` | Distribuicao por dimensao (pais, browser, etc) |
+
+## Sumario Global
+
+```bash
+curl "https://links.orayon.com.br/api/analytics?type=global&from=2026-03-01&to=2026-03-17" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Sumario de Link
+
+```bash
+curl "https://links.orayon.com.br/api/analytics?type=summary&link_id=LINK_UUID&from=2026-03-01&to=2026-03-17" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Timeseries
+
+```bash
+curl "https://links.orayon.com.br/api/analytics?type=timeseries&link_id=LINK_UUID&interval=day&from=2026-03-01&to=2026-03-17" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+### Parametros
+
+| Param | Descricao |
+|-------|-----------|
+| `interval` | `day` ou `hour` |
+| `from` | Data inicio (ISO 8601) |
+| `to` | Data fim (ISO 8601) |
+
+Dias sem clicks sao incluidos com `count: 0` (gap-filling).
+
+## Breakdown
+
+```bash
+curl "https://links.orayon.com.br/api/analytics?type=breakdown&link_id=LINK_UUID&dimension=country" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+### Dimensoes disponiveis
+
+| Dimensao | Descricao |
+|----------|-----------|
+| `country` | Pais (codigo ISO) |
+| `city` | Cidade |
+| `browser` | Navegador |
+| `os` | Sistema operacional |
+| `device_type` | `pc`, `phone`, `tablet` |
+| `referer_domain` | Dominio de origem |
+| `utm_source` | UTM source |
+| `utm_medium` | UTM medium |
+| `utm_campaign` | UTM campaign |
+
+## Query Params Globais
+
+| Param | Default | Descricao |
+|-------|---------|-----------|
+| `from` | 30 dias atras | Data inicio |
+| `to` | agora | Data fim |
+
+<Note>
+  O range maximo e de 365 dias. Datas invalidas retornam erro 400.
+</Note>
+
+## Dados trackeados por click
+
+Cada click registra automaticamente:
+
+- **Geo**: pais, cidade, regiao (via Cloudflare)
+- **Device**: browser, versao, OS, tipo (pc/phone/tablet)
+- **Referer**: dominio de origem
+- **UTMs**: source, medium, campaign, term, content
+- **IP hash**: hash SHA-256 do IP + salt (privacidade)
+- **is_unique**: se e o primeiro click daquele IP em 24h
+- **is_bot**: deteccao automatica de 30+ bots conhecidos

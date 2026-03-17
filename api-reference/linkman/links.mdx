@@ -1,0 +1,159 @@
+---
+title: 'Links CRUD'
+description: 'Criar, listar, atualizar e desativar links encurtados'
+---
+
+## Criar Link
+
+<CodeGroup>
+```bash Com slug custom
+curl -X POST https://links.orayon.com.br/api/links \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "destination_url": "https://orayon.com.br",
+    "slug": "meu-link",
+    "title": "Site Orayon",
+    "notes": "Campanha de marketing"
+  }'
+```
+
+```bash Auto-generate slug
+curl -X POST https://links.orayon.com.br/api/links \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "destination_url": "https://orayon.com.br",
+    "title": "Auto slug"
+  }'
+```
+</CodeGroup>
+
+### Parametros
+
+| Campo | Tipo | Obrigatorio | Descricao |
+|-------|------|-------------|-----------|
+| `destination_url` | string | Sim | URL de destino (http/https) |
+| `slug` | string | Nao | Slug personalizado (3-50 chars, a-z0-9_-). Se omitido, gera automaticamente |
+| `title` | string | Nao | Titulo do link |
+| `notes` | string | Nao | Notas internas |
+
+### Resposta (201)
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "ebc907c3-339a-4f36-801a-d05fcfe1991b",
+    "slug": "meu-link",
+    "destination_url": "https://orayon.com.br",
+    "title": "Site Orayon",
+    "notes": "Campanha de marketing",
+    "is_active": true,
+    "created_at": "2026-03-17T02:25:50.070Z",
+    "updated_at": "2026-03-17T02:25:50.070Z"
+  }
+}
+```
+
+### Erros
+
+| Status | Erro | Causa |
+|--------|------|-------|
+| 400 | `destination_url is required` | Campo obrigatorio ausente |
+| 400 | `URL must use http or https` | Protocolo invalido |
+| 400 | `Private IP not allowed` | URL aponta para rede privada (SSRF prevention) |
+| 400 | `Slug must be 3-50 characters` | Tamanho do slug invalido |
+| 409 | `Slug already exists` | Slug duplicado |
+
+### Slugs reservados
+
+Os seguintes slugs nao podem ser usados: `api`, `admin`, `health`, `favicon`, `functions`, `favicon.ico`, `robots.txt`
+
+---
+
+## Listar Links
+
+```bash
+curl "https://links.orayon.com.br/api/links?page=1&limit=20&search=orayon" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+### Query params
+
+| Param | Tipo | Default | Descricao |
+|-------|------|---------|-----------|
+| `page` | int | 1 | Pagina |
+| `limit` | int | 20 | Itens por pagina (max 100) |
+| `search` | string | - | Busca por slug ou titulo (case-insensitive) |
+
+### Resposta (200)
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "ebc907c3-...",
+      "slug": "meu-link",
+      "destination_url": "https://orayon.com.br",
+      "title": "Site Orayon",
+      "is_active": true,
+      "created_at": "2026-03-17T02:25:50.070Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 20
+}
+```
+
+---
+
+## Buscar Link por ID
+
+```bash
+curl "https://links.orayon.com.br/api/links?id=ebc907c3-339a-4f36-801a-d05fcfe1991b" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+Retorna o link com deep links, pixels associados e total de clicks.
+
+---
+
+## Atualizar Link
+
+```bash
+curl -X PUT https://links.orayon.com.br/api/links \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "ebc907c3-339a-4f36-801a-d05fcfe1991b",
+    "destination_url": "https://nova-url.com",
+    "title": "Novo titulo",
+    "is_active": true
+  }'
+```
+
+### Parametros
+
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `id` | UUID | ID do link (obrigatorio) |
+| `destination_url` | string | Nova URL de destino |
+| `title` | string | Novo titulo |
+| `notes` | string | Novas notas |
+| `is_active` | boolean | Ativar/desativar |
+| `deeplinks` | array | Deep links (substitui todos) |
+| `pixel_ids` | array | IDs dos pixels (substitui todos) |
+
+---
+
+## Desativar Link (Soft Delete)
+
+```bash
+curl -X DELETE "https://links.orayon.com.br/api/links?id=ebc907c3-339a-4f36-801a-d05fcfe1991b" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+O link nao e apagado do banco, apenas marcado como `is_active: false`. Acessos ao slug retornam 404.

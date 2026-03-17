@@ -1,0 +1,102 @@
+---
+title: 'Deep Links'
+description: 'Configurar deep links para iOS e Android'
+---
+
+## Como funciona
+
+Deep links permitem redirecionar usuarios para apps nativos (iOS/Android) em vez do browser. Se o app nao estiver instalado, o usuario e redirecionado para uma URL de fallback.
+
+O redirect detecta automaticamente o dispositivo e OS do usuario:
+
+| Dispositivo | OS | Acao |
+|---|---|---|
+| Phone | Android | Abre intent:// URL com fallback |
+| Phone/Tablet | iOS | Abre Universal Link (https://) |
+| PC | qualquer | 302 redirect normal |
+
+## Configurar Deep Links
+
+Deep links sao configurados via `PUT /api/links` com o campo `deeplinks`:
+
+```bash
+curl -X PUT https://links.orayon.com.br/api/links \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "LINK_UUID",
+    "deeplinks": [
+      {
+        "platform": "android",
+        "fallback_url": "https://play.google.com/store/apps/details?id=com.exemplo.app",
+        "app_package": "com.exemplo.app",
+        "app_scheme": "exemploapp",
+        "app_url": "produto/123",
+        "app_store_url": "https://play.google.com/store/apps/details?id=com.exemplo.app"
+      },
+      {
+        "platform": "ios",
+        "fallback_url": "https://apps.apple.com/app/id123456789",
+        "universal_link_url": "https://exemplo.com/app/produto/123",
+        "app_store_url": "https://apps.apple.com/app/id123456789"
+      }
+    ]
+  }'
+```
+
+## Campos por Plataforma
+
+### Android
+
+| Campo | Obrigatorio | Descricao |
+|-------|-------------|-----------|
+| `platform` | Sim | `"android"` |
+| `fallback_url` | Sim | URL se app nao instalado |
+| `app_package` | Sim | Package name (ex: `com.exemplo.app`) |
+| `app_scheme` | Nao | Custom scheme (ex: `exemploapp`) |
+| `app_url` | Nao | Path dentro do app (ex: `produto/123`) |
+| `app_store_url` | Nao | Link da Play Store |
+
+**Como funciona no Android:**
+
+1. Gera URL `intent://` com o package name
+2. Android tenta abrir o app registrado para aquele package
+3. Se nao instalado, redireciona para `fallback_url` apos 3 segundos
+4. Se `app_store_url` fornecido, mostra link "Baixar o app"
+
+### iOS
+
+| Campo | Obrigatorio | Descricao |
+|-------|-------------|-----------|
+| `platform` | Sim | `"ios"` |
+| `fallback_url` | Sim | URL se app nao instalado |
+| `universal_link_url` | Nao | Universal Link (https://) registrado no app |
+| `app_store_url` | Nao | Link da App Store |
+
+**Como funciona no iOS:**
+
+1. Redireciona para o `universal_link_url` (deve ser um link https:// registrado como Universal Link no app)
+2. iOS intercepta automaticamente e abre o app se instalado
+3. Se nao instalado, abre a URL normalmente no Safari
+4. Se `app_store_url` fornecido, mostra link "Baixar o app"
+
+<Warning>
+  Para iOS, o `universal_link_url` deve estar configurado no Apple App Site Association (AASA) do dominio do app. Sem isso, o iOS nao vai interceptar o link.
+</Warning>
+
+### Desktop
+
+| Campo | Obrigatorio | Descricao |
+|-------|-------------|-----------|
+| `platform` | Sim | `"desktop"` |
+| `fallback_url` | Sim | URL de redirect no desktop |
+
+Desktop deep links simplesmente fazem 302 redirect para o `fallback_url`.
+
+## Comportamento Atomico
+
+Os deep links sao substituidos atomicamente via SQL function `linkman_replace_deeplinks`:
+
+1. Deleta todos os deep links existentes do link
+2. Insere os novos
+3. Tudo dentro de uma transacao - se algo falhar, nada e alterado
